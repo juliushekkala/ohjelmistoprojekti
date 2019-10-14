@@ -13,7 +13,7 @@ function checkHTTP(doc) {
 }
 
 try {
-    var ymlfile = yaml.safeLoad(fs.readFileSync('petstore_large.yaml', 'utf8'));
+    var ymlfile = yaml.safeLoad(fs.readFileSync('src/test/petstore.yaml', 'utf8'));
 } catch (e) {
     console.log(e);
 }
