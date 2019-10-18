@@ -1,6 +1,10 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as readapi from "./readapi";
+
+const yaml = require('js-yaml');
+const fs   = require('fs');
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -22,6 +26,35 @@ export function activate(context: vscode.ExtensionContext) {
 		//Display time to user
 		let currentTime = new Date();
 		vscode.window.showInformationMessage(currentTime.toString());
+		var currentlyOpenTabfilePath = "hello.txt";
+		//from https://stackoverflow.com/a/42637468 
+		//Get the path of the currently open file
+		if (typeof vscode.window.activeTextEditor  !== 'undefined') {
+			currentlyOpenTabfilePath = vscode.window.activeTextEditor.document.fileName;
+		}
+		//Check that it is yaml 
+		if (currentlyOpenTabfilePath.endsWith("yaml")) {
+			vscode.window.showInformationMessage(currentlyOpenTabfilePath);
+		}
+		
+		//Load the yaml 
+		
+		try {
+			var ymlfile = yaml.safeLoad(fs.readFileSync(currentlyOpenTabfilePath, 'utf8'));
+		} catch (e) {
+			vscode.window.showInformationMessage("failure :D");
+		}
+		
+		//Check whether the server supports HTTP
+		var servers_here = readapi.checkHTTP(ymlfile);
+		//Iterate through the results and show them to the user. 
+		for (let key in servers_here) {
+			let value = servers_here[key];
+			vscode.window.showInformationMessage(key + "," + value);
+		}
+
+		
+		
 	});
 
 	context.subscriptions.push(disposable);
