@@ -53,7 +53,19 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage(key + "," + value);
 		}
 
-		
+		//Starting the output channel
+		const outputChannel = vscode.window.createOutputChannel('OpenAPI yaml tester');
+		outputChannel.appendLine('This is the output window for the extension');
+		outputChannel.show(true);
+		//Testing some printing
+		let test1_name = 'http test';
+		let test_number = '0';
+		setTimeout(() => { 
+			outputChannel.appendLine('Running test:');
+			outputChannel.appendLine(test_number);
+			outputChannel.appendLine(test1_name);
+		}, 500);
+			
 		
 	});
 
