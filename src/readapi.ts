@@ -4,7 +4,7 @@ const fs   = require('fs');
 //This file is imported to the main plugin file
 //Includes functions that check security features of a OPENAPI-file
 
-function checkHTTP(doc: any) {
+export function checkHTTP(doc: any) {
     var servers = doc.servers;
     var addrlist: {[index: string]:any} = {};
     for (var server of servers) {
@@ -18,12 +18,5 @@ function checkHTTP(doc: any) {
         }
     }
     console.log(addrlist);
+    return addrlist;
 }
-
-try {
-    var ymlfile = yaml.safeLoad(fs.readFileSync('test/petstore.yaml', 'utf8'));
-} catch (e) {
-    console.log(e);
-}
-
-checkHTTP(ymlfile);

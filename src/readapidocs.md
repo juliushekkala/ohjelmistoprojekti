@@ -1,5 +1,3 @@
-readapi functions and what they return
-
-# checkHTTP
-returns an object with urls paired with boolean that marks if url uses https
+#checkHTTP
+Return an object (dictionary) where each found url is linked to boolean. True = https, False = http
 
