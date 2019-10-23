@@ -10,9 +10,9 @@ export class Apicheck {
     constructor(doc: any) {
         this.yaml = doc;
     }
-checkHTTP(doc: any) {
+checkHTTP() {
     //Returns an object (dictionary) where each found url is linked to boolean. True = https, False = http
-    var servers = doc.servers;
+    var servers = this.yaml.servers;
     var addr_list: {[index: string]:any} = {};
 
     //Go through servers, check if their urls start with https and update object accordingly
@@ -31,8 +31,8 @@ checkHTTP(doc: any) {
     return addr_list;
 }
 
-checkSecurityScheme(doc: any) {
-    var sec_schemes = doc.components.securitySchemes;
+checkSecurityScheme() {
+    var sec_schemes = this.yaml.components.securitySchemes;
     if (typeof sec_schemes === "undefined") {
         let sec_schemes: {[index: string]:boolean} = {};
         sec_schemes['status'] = false;
@@ -42,10 +42,10 @@ checkSecurityScheme(doc: any) {
     return sec_schemes;
 }
 
-public checkSecurity(doc: any) {
+public checkSecurity() {
     var api_object: {[index: string]:any} = {};
-    api_object['addr_list'] = this.checkHTTP(this.yaml);
-    api_object['sec_schemes'] = this.checkSecurityScheme(this.yaml);
+    api_object['addr_list'] = this.checkHTTP();
+    api_object['sec_schemes'] = this.checkSecurityScheme();
     return api_object;
 }
 }
