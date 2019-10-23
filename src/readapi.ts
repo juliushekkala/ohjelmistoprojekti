@@ -24,6 +24,7 @@ checkHTTP(doc: any) {
         }
         else {
             addr_list[address] = false;
+            addr_list['status'] = false;
         }
     }
     //console.log(addrlist);
@@ -33,8 +34,11 @@ checkHTTP(doc: any) {
 checkSecurityScheme(doc: any) {
     var sec_schemes = doc.components.securitySchemes;
     if (typeof sec_schemes === "undefined") {
-        return false;
+        let sec_schemes: {[index: string]:boolean} = {};
+        sec_schemes['status'] = false;
+        return sec_schemes;
     }
+    sec_schemes['status'] = true;
     return sec_schemes;
 }
 
