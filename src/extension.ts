@@ -108,8 +108,13 @@ export function activate(context: vscode.ExtensionContext) {
 				exploit = "Scheme exploit possible";
 				flawcause = " -> this is wrong";
 				allgood = "Security schemes seem to be ok";}
+			else {				
+				teststart = "Starting a test, which I don't yet know";
+				exploit = "Scheme exploit possible, don't know the exploit";
+				flawcause = " -> this is wrong, don't know what it is";
+				allgood = "Test was ok, don't know what was tested";}
 			//time to print them out
-			out(teststart);
+			out("Test",numberoftests, ": ",teststart);
 			//printing only if the status bit is false
 			if (value["status"] === false){
 					for (let flaw in value) {
@@ -123,11 +128,10 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			else {out(allgood);}
 			//The current test finished, starting new test
-			out("Tested test number " + numberoftests);
 		}
 
 		//Yaml file testing ended, give results
-		out("Tested ", numberoftests, " rows");
+		out("Tested ", numberoftests, " test modules");
 
 	});
 
