@@ -90,19 +90,18 @@ export function activate(context: vscode.ExtensionContext) {
 		//Print the name of the test function
 		out('Checking if the urls contain http:// addresses');
 		let numberoftests = 0;
-
+		let numberofthistest = 0;
 		//Iterate through the results and show them to the user. 
 		for (let key in servers_here) {
 			let value = servers_here[key];
-			//vscode.window.showInformationMessage(key + "," + value);
-			
+			numberoftests++;
+			numberofthistest++;	
 			//Print them to output
-			out(key.concat(" ", value));
+			out("Testi nro" + numberofthistest, key, value);
 		}
 
 		//HTTP testing ended, give number of addresses found
-		let textfiller = "Found ";
-		out(textfiller.concat(numberoftests.toString()));
+		out("Found ", numberoftests.toString(), " errors");
 
 	});
 
