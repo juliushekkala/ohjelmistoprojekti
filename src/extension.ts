@@ -82,9 +82,10 @@ export function activate(context: vscode.ExtensionContext) {
 		} catch (e) {
 			vscode.window.showInformationMessage("failure :D");
 		}
-
+		
 		//Check whether the server supports HTTP
-		var servers_here = readapi.checkHTTP(ymlfile);
+		let Apicheck = new readapi.Apicheck(ymlfile);
+		var servers_here = Apicheck.checkSecurity(ymlfile);
 
 		//Print the name of the test function
 		out('Checking if the urls contain http:// addresses');
