@@ -2,7 +2,6 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as readapi from "./readapi";
-import { isNull } from 'util';
 
 const yaml = require('js-yaml');
 const fs = require('fs');
@@ -94,18 +93,36 @@ export function activate(context: vscode.ExtensionContext) {
 		for (let key in servers_here) {
 			let value = servers_here[key];
 			numberoftests++;
+			//Set up some text here according to the current test
+			let teststart = "";
+			let exploit = "";
+			let flawcause = "";
+			let allgood = "";
 			if (key === "addr_list"){
-				out("Checking if there are http-addresses instead of https");
+				teststart = "Checking if there are http-addresses instead of https:";
+				exploit = "By not having a https server the api is vulnerable for wifi attacks";
+				flawcause = " -> is not https!";
+				allgood = "Urls seem to be ok, thats good!";}
+			else if (key === "sec_schemes"){				
+				teststart = "Checking sec schemes:";
+				exploit = "Scheme exploit possible";
+				flawcause = " -> this is wrong";
+				allgood = "Security schemes seem to be ok";}
+			//time to print them out
+			out(teststart);
+			//printing only if the status bit is false
+			if (value["status"] === false){
+					for (let flaw in value) {
+					//dont want to print the status again though
+					if (flaw === "status") {continue;}
+					if (value[flaw] === false) {
+						out(flaw, flawcause);
+					}
+				}
+				out(exploit);
 			}
-			else if (key === "sec_schemes") {
-				out("Checking that the security schemes exists");
-			}
-
-			//Print them to output, 
-			//value gives object objects now...
-			for (let key2 in value) {
-				out(key2 + ", " + value[key2]);
-			}
+			else {out(allgood);}
+			//The current test finished, starting new test
 			out("Tested test number " + numberoftests);
 		}
 
