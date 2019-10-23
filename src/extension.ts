@@ -87,7 +87,7 @@ export function activate(context: vscode.ExtensionContext) {
 		
 		//Check whether the server supports HTTP
 		let Apicheck = new readapi.Apicheck(ymlfile);
-		var servers_here = Apicheck.checkSecurity(ymlfile);
+		var servers_here = Apicheck.checkSecurity();
 
 		//Iterate through the results and show them to the user. 
 		let numberoftests = 0;
