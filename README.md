@@ -4,8 +4,15 @@ This Visual Studio Code extension is currently in development. It is being devel
 
 ## How to Use
 
-Open a yaml OpenAPI specification file of your server. Run "testi" command and the plugin will run. 
+Clone the repository and open it in Visual Studio Code. Run
+
+´´´
+npm install
+´´´
+
+in the folder. Then you can press "F5" in Visual Studio Code and it will open an extension development host. There you can press "Ctrl + shift + P" and then write "testi" command to run the plugin. Before running the plugin make sure an OpenAPI specification yaml is currently open in the extension development host.
+Test results will appear in output.
 
 ## Known Issues
 
-The extension is in development. 
+The extension is in development.
