@@ -2,9 +2,12 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as readapi from "./readapi";
+import { isNull } from 'util';
 
 const yaml = require('js-yaml');
 const fs = require('fs');
+
+
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -20,21 +23,38 @@ export function activate(context: vscode.ExtensionContext) {
 	let disposable = vscode.commands.registerCommand('extension.helloWorld', () => {
 		// The code you place here will be executed every time your command is executed
 
-		// Display a message box to the user
+		// Display a message box to the user (in the lower right corner)
 		vscode.window.showWarningMessage('Starting openAPI yaml tester');
 
 		//Starting the output channel and showing it to the user
-		const print = vscode.window.createOutputChannel('openAPI yaml tester');
-		print.appendLine('This is the output window for the extension');
-		print.show(true);
+		//defining outChannel for the out() function
+		const outChannel = vscode.window.createOutputChannel('openAPI yaml tester');
+		
+		//out() print function (move to other .ts?, allow more than 4?)
+		function out(first?: any, second?: any, third?: any, fourth?: any) {
+		if (fourth)	{
+			outChannel.appendLine(`${first}${second}${third}${fourth}`);
+		}
+		else if (third) {
+			outChannel.appendLine(`${first}${second}${third}`);
+		} 
+		else if (second){
+			outChannel.appendLine(`${first}${second}`);
+		}		
+		else {
+			outChannel.appendLine(`${first}`);
+		}
+		}
+
+		// Create a connection for the server. The connection uses 
+		// stdin / stdout for message passing
+		out('This is the output window for the extension');
+		outChannel.show(true);
 
 		//Find current time
 		let currentTime = new Date();
-		//Display time to user
-		//vscode.window.showInformationMessage(currentTime.toString());
-		//Print time to user (Itä-Euroopan kesäaika??)
-		print.appendLine('Starting tests at:');
-		print.appendLine(currentTime.toString());
+		out('Starting tests at:');
+		out(currentTime.getHours() + ":", currentTime.getMinutes() + ":", currentTime.getSeconds());
 
 		var currentlyOpenTabfilePath = "hello.txt";
 		//from https://stackoverflow.com/a/42637468 
@@ -44,16 +64,16 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		//Print file name
-		print.appendLine('Testing file:');
-		print.appendLine(currentlyOpenTabfilePath);
+		out('Testing file:');
+		out(currentlyOpenTabfilePath);
 
 		//Check that file to be tested is yaml 
 		if (currentlyOpenTabfilePath.endsWith("yaml")) {
 			vscode.window.showInformationMessage(currentlyOpenTabfilePath);
-			print.appendLine('File is yaml, OK!');
+			out('File is yaml, OK!');
 		}
 		else {
-			print.appendLine('Not yaml!');
+			out('Not yaml!');
 		}
 
 		//Load the yaml 
@@ -67,7 +87,7 @@ export function activate(context: vscode.ExtensionContext) {
 		var servers_here = readapi.checkHTTP(ymlfile);
 
 		//Print the name of the test function
-		print.appendLine('Checking if the urls contain http:// addresses');
+		out('Checking if the urls contain http:// addresses');
 		let numberoftests = 0;
 
 		//Iterate through the results and show them to the user. 
@@ -76,12 +96,12 @@ export function activate(context: vscode.ExtensionContext) {
 			//vscode.window.showInformationMessage(key + "," + value);
 			
 			//Print them to output
-			print.appendLine(key.concat(" ", value));
+			out(key.concat(" ", value));
 		}
 
 		//HTTP testing ended, give number of addresses found
 		let textfiller = "Found ";
-		print.appendLine(textfiller.concat(numberoftests.toString()));
+		out(textfiller.concat(numberoftests.toString()));
 
 	});
 
