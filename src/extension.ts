@@ -46,15 +46,17 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		}
 
-		// Create a connection for the server. The connection uses 
-		// stdin / stdout for message passing
+		//Start outputChannel and show it for the user
 		out('This is the output window for the extension');
 		outChannel.show(true);
 
 		//Find current time
 		let currentTime = new Date();
 		out('Starting tests at:');
-		out(currentTime.getHours() + ":", currentTime.getMinutes() + ":", currentTime.getSeconds());
+		//adding leading zero and slicing to get 2 last digits from all...
+		out(("0" + currentTime.getHours()).slice(-2) + ":", 
+			("0" +currentTime.getMinutes()).slice(-2) + ":", 
+			("0" +currentTime.getSeconds()).slice(-2));
 
 		var currentlyOpenTabfilePath = "hello.txt";
 		//from https://stackoverflow.com/a/42637468 
@@ -73,7 +75,7 @@ export function activate(context: vscode.ExtensionContext) {
 			out('File is yaml, OK!');
 		}
 		else {
-			out('Not yaml!');
+			out('File is not yaml, cannot test this!');
 		}
 
 		//Load the yaml 
@@ -90,18 +92,17 @@ export function activate(context: vscode.ExtensionContext) {
 		//Print the name of the test function
 		out('Checking if the urls contain http:// addresses');
 		let numberoftests = 0;
-		let numberofthistest = 0;
 		//Iterate through the results and show them to the user. 
 		for (let key in servers_here) {
 			let value = servers_here[key];
 			numberoftests++;
-			numberofthistest++;	
-			//Print them to output
-			out("Testi nro" + numberofthistest, key, value);
+			//Print them to output, 
+			//this gives object objects now...
+			out("Testi nro" + numberoftests, key, value);
 		}
 
 		//HTTP testing ended, give number of addresses found
-		out("Found ", numberoftests.toString(), " errors");
+		out("Tested ", numberoftests.toString(), " rows");
 
 	});
 
