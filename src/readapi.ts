@@ -4,32 +4,46 @@ const fs   = require('fs');
 //This file is imported to the main plugin file
 //Includes functions that check security features of a OPENAPI-file
 
-export function checkHTTP(doc: any) {
+export class Apicheck {
+
+    yaml: any;
+    constructor(doc: any) {
+        this.yaml = doc;
+    }
+checkHTTP(doc: any) {
     //Returns an object (dictionary) where each found url is linked to boolean. True = https, False = http
     var servers = doc.servers;
-    var addrlist: {[index: string]:any} = {};
+    var addr_list: {[index: string]:any} = {};
 
     //Go through servers, check if their urls start with https and update object accordingly
     for (var server of servers) {
         var address = server['url'];
         //console.log(address);
         if (address.startsWith("https")){
-            addrlist[address] = true;
+            addr_list[address] = true;
         }
         else {
-            addrlist[address] = false;
+            addr_list[address] = false;
         }
     }
     //console.log(addrlist);
-    return addrlist;
+    return addr_list;
 }
 
-export function checkSecurityScheme(doc: any) {
-    var secSchemes = doc.components.securitySchemes;
-    if (typeof secSchemes === "undefined") {
+checkSecurityScheme(doc: any) {
+    var sec_schemes = doc.components.securitySchemes;
+    if (typeof sec_schemes === "undefined") {
         return false;
     }
-    return secSchemes;
+    return sec_schemes;
+}
+
+public checkSecurity(doc: any) {
+    var api_object: {[index: string]:any} = {};
+    api_object['addr_list'] = this.checkHTTP(this.yaml);
+    api_object['sec_schemes'] = this.checkSecurityScheme(this.yaml);
+    return api_object;
+}
 }
 
 //Everything below is testing only and should always be commented out before committing changes
@@ -40,5 +54,6 @@ try {
     console.log(e);
 }
 
-var schemes = checkSecurityScheme(ymlfile);
-console.log(schemes);*/
+var schemes = checkSecurity(ymlfile);
+console.log(schemes);
+*/
