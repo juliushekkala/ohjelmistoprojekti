@@ -89,20 +89,28 @@ export function activate(context: vscode.ExtensionContext) {
 		let Apicheck = new readapi.Apicheck(ymlfile);
 		var servers_here = Apicheck.checkSecurity(ymlfile);
 
-		//Print the name of the test function
-		out('Checking if the urls contain http:// addresses');
-		let numberoftests = 0;
 		//Iterate through the results and show them to the user. 
+		let numberoftests = 0;
 		for (let key in servers_here) {
 			let value = servers_here[key];
 			numberoftests++;
+			if (key === "addr_list"){
+				out("Checking if there are http-addresses instead of https");
+			}
+			else if (key === "sec_schemes") {
+				out("Checking that the security schemes exists");
+			}
+
 			//Print them to output, 
-			//this gives object objects now...
-			out("Testi nro" + numberoftests, key, value);
+			//value gives object objects now...
+			for (let key2 in value) {
+				out(key2 + ", " + value[key2]);
+			}
+			out("Tested test number " + numberoftests);
 		}
 
-		//HTTP testing ended, give number of addresses found
-		out("Tested ", numberoftests.toString(), " rows");
+		//Yaml file testing ended, give results
+		out("Tested ", numberoftests, " rows");
 
 	});
 
