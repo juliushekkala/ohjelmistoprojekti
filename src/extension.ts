@@ -28,7 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
 		messages.start();
 
 		//Find current time
-		messages.time();
+		messages.time('Starting tests at: ');
 
 		var currentlyOpenTabfilePath = "hello.txt";
 		//from https://stackoverflow.com/a/42637468 
@@ -50,15 +50,21 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage("failure :D");
 		}
 		
-		//Check whether the server supports HTTP
+		//Run the security tests from readapi
 		let Apicheck = new readapi.Apicheck(ymlfile);
 		var servers_here = Apicheck.checkSecurity();
-		messages.test(servers_here);
 		//Iterate through the results and show them to the user. 
-	
+		messages.security(servers_here);
+		
+		//Finally, print the ending time
+		messages.time('Tests ended at: ');
 	}
+
 	
-); context.subscriptions.push(disposable);}
+
+	
+
+	); context.subscriptions.push(disposable);}
 
 // this method is called when your extension is deactivated
 export function deactivate() { }
