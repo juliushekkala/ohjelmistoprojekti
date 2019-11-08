@@ -42,16 +42,30 @@ checkSecurityScheme() {
     return sec_schemes;
 }
 
+//Check whether global security field is defined
+checkSecurityField() {
+    var sec_field = this.yaml.security;
+    //not defined
+    if (typeof sec_field === "undefined") {
+        let sec_field: {[index: string]:boolean} = {};
+        sec_field['status'] = false;
+        return sec_field;
+    }
+    sec_field['status'] = true;
+    return sec_field;
+}
+
 public checkSecurity() {
     var api_object: {[index: string]:any} = {};
     api_object['addr_list'] = this.checkHTTP();
     api_object['sec_schemes'] = this.checkSecurityScheme();
+    api_object['sec_field'] = this.checkSecurityField();
     return api_object;
 }
 }
 
 //Everything below is testing only and should always be commented out before committing changes
-/*
+/* 
 try {
     var ymlfile = yaml.safeLoad(fs.readFileSync('test/petstore.yaml', 'utf8'));
 } catch (e) {
