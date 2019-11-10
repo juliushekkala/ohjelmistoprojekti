@@ -12,24 +12,32 @@ export class Datavalidationcheck {
     }
 
 checkParamSchemas() {
+    //Checks if each parameter object has a schema defined
+    //Schemas limit accepted inputs (SQL injections)
     var paths = this.yaml.paths;
     var problemparams: {[index: string]:any} = {};
-    problemparams.status = true;
+    problemparams['status'] = true;
     problemparams.locations = [];
     for (let path in paths) {
         for (let itemobject in paths[path]) {
             if (paths[path][itemobject]['parameters'] === undefined) {
                 //No parameters here
-                let location = "paths" + path + "/" + itemobject;
-                problemparams.locations.push(location);
-                if (problemparams.status) {
-                    problemparams.status = false;
+                continue;
+            }
+            else {
+                //TODO Checking if schema actually exists in list parameters
+                if (paths[path][itemobject]['parameters']['schema'] === undefined) {
+                    let location = "paths" + path + "/" + itemobject + "/" + "parameters";
+                    problemparams.locations.push(location);
+                    if (problemparams['status']) {
+                        problemparams['status'] = false;
+                    }
                 }
             }
         }
+    
     }
     return problemparams;
-
 }
 
 public checkDataValidation() {
