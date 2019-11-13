@@ -21,12 +21,16 @@ checkParamSchemas() {
     problemparams.locations = [];
     for (let path in paths) {
         if (paths[path]['parameters'] !== undefined) {
-            //Parameter object itself in [0], reference should be [1]
-            if (paths[path]['parameters'][0]['schema'] === undefined) {
-                let location = "paths" + path +  "/" + "parameters";
-                problemparams.locations.push(location);
-                if (problemparams['status']) {
-                    problemparams['status'] = false;
+            for (let i=0; i<paths[path]['parameters'].length; i++) {
+                if (paths[path]['parameters'][i]['$ref'] === undefined) {
+                    continue;
+                }
+                if (paths[path]['parameters'][i]['schema'] === undefined && paths[path]['parameters'][i]['content'] === undefined) {
+                    let location = "paths" + path +  "/" + "parameters";
+                    problemparams.locations.push(location);
+                    if (problemparams['status']) {
+                        problemparams['status'] = false;
+                    }
                 }
             }
         }
@@ -36,18 +40,40 @@ checkParamSchemas() {
                 continue;
             }
             else {
-                //Parameter object itself in [0], reference should be [1]
-                if (paths[path][itemobject]['parameters'][0]['schema'] === undefined) {
-                    let location = "paths" + path + "/" + itemobject + "/" + "parameters";
-                    problemparams.locations.push(location);
-                    if (problemparams['status']) {
-                        problemparams['status'] = false;
+                for (let i=0; i<paths[path][itemobject]['parameters'].length; i++) {
+                    if (paths[path][itemobject]['parameters'][i]['$ref'] !== undefined) {
+                        //Parameters defined elsewhere
+                        continue;
+                    }
+                    if (paths[path][itemobject]['parameters'][i]['schema'] === undefined && paths[path][itemobject]['parameters'][i]['content'] === undefined) {
+                        let location = "paths" + path + "/" + itemobject + "/" + "parameters";
+                        problemparams.locations.push(location);
+                        if (problemparams['status']) {
+                            problemparams['status'] = false;
+                        }
                     }
                 }
             }
         }
-    
     }
+    var components = this.yaml.components;
+    if (components['parameters'] !== undefined) {
+        for (let param in components['parameters']) {
+            if (components['parameters'][param]['$ref'] !== undefined) {
+                //Parameters defined elsewhere
+                continue;
+            }
+            else if (components['parameters'][param]['schema'] === undefined && components['parameters'][param]['content'] === undefined) {
+                let location = "components/parameters/" + param;
+                problemparams.locations.push(location);
+                if (problemparams['status']) {
+                    problemparams['status'] = false;
+                }
+            }
+        }
+    }
+    //var testet = paths['/pet']['post']['requestBody']['$ref'];
+    //console.log(testet);
     return problemparams;
 }
 
@@ -61,7 +87,7 @@ public checkDataValidation() {
 //Everything below is testing only and should always be commented out before committing changes
 /*
 try {
-    var ymlfile = yaml.safeLoad(fs.readFileSync('test/petstore.yaml', 'utf8'));
+    var ymlfile = yaml.safeLoad(fs.readFileSync('test/link.yaml', 'utf8'));
 } catch (e) {
     console.log(e);
 }
