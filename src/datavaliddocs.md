@@ -4,6 +4,7 @@
 Each function has own key that has object as value
 status -key has boolean value, false if problems were found
 <<<<<<< HEAD
+<<<<<<< HEAD
 Also includes the path for (if applicable) the problems, locations -key
 
 Current sample straight from terminal
@@ -16,6 +17,9 @@ Current sample straight from terminal
 =======
 Also includes the path for the problems, locations -key
 >>>>>>> Work on paramschemas
+=======
+Also includes the path for (if applicable) the problems, locations -key
+>>>>>>> Started work on finding schemas from api
 
 ## checkParamSchemas
 Checks if each parameter object has a schema defined

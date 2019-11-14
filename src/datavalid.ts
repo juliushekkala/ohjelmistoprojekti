@@ -77,17 +77,42 @@ checkParamSchemas() {
     return problemparams;
 }
 
+checkSchemas() {
+    var contract = this.yaml;
+    for (let field in contract) {
+        if (typeof contract[field] === 'object') {
+            var x = Object.keys(contract[field]);
+            console.log(x);
+            if ('schema' in contract[field]) {
+                console.log(field);
+            }
+        }
+    }
+}
+
+findSchemas(obj: any, schemas: any, location: string) {
+    for (let field in obj) {
+        if (typeof obj[field] === 'object') {
+            if (obj[field]['schema'] !== undefined) {
+                
+            }
+        }
+    }
+}
+
+
 public checkDataValidation() {
     var data_object: {[index: string]:any} = {};
     data_object['param_schemas'] = this.checkParamSchemas();
+    this.checkSchemas();
     return data_object;
 }
 }
 
 //Everything below is testing only and should always be commented out before committing changes
-/*
+
 try {
-    var ymlfile = yaml.safeLoad(fs.readFileSync('test/link.yaml', 'utf8'));
+    var ymlfile = yaml.safeLoad(fs.readFileSync('test/petstore.yaml', 'utf8'));
 } catch (e) {
     console.log(e);
 }
@@ -96,4 +121,3 @@ let Datacheck = new Datavalidationcheck(ymlfile);
 
 var schemes = Datacheck.checkDataValidation();
 console.log(schemes);
-*/
