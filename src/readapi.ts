@@ -59,11 +59,10 @@ checkSecurityField() {
         return sec_field;  
     }
 
-    //if there are empty security fields (as in just "-"))
+    //if there are empty security requirements (as in just "- {}"))
     if (sec_field.length > 0) {
-        console.log("test");
         for (var sec in sec_field) {
-            if (sec_field[sec] === null) {
+            if (Object.keys(sec_field[sec]).length === 0) {
                 let sec_field: {[index: string]:boolean} = {};
                 sec_field['status'] = false;
                 return sec_field;  
