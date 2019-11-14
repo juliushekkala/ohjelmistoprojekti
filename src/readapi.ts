@@ -42,7 +42,7 @@ checkSecurityScheme() {
     return sec_schemes;
 }
 
-//Check whether global security field is defined
+//Check whether global security field is defined && that it is not an empty array
 checkSecurityField() {
     var sec_field = this.yaml.security;
     //not defined
@@ -51,7 +51,17 @@ checkSecurityField() {
         sec_field['status'] = false;
         return sec_field;
     }
+
+    //if the security field is just an empty array
+    if (sec_field.length === 0) {
+        let sec_field: {[index: string]:boolean} = {};
+        sec_field['status'] = false;
+        return sec_field;  
+    }
+    
+    
     sec_field['status'] = true;
+    console.log(sec_field);
     return sec_field;
 }
 
