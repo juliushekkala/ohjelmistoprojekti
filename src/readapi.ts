@@ -1,5 +1,6 @@
 const yaml = require('js-yaml');
 const fs   = require('fs');
+const validUrl = require('valid-url');
 
 //This file is imported to the main plugin file
 //Includes functions that check security features of a OPENAPI-file
@@ -38,8 +39,53 @@ checkSecurityScheme() {
         sec_schemes['status'] = false;
         return sec_schemes;
     }
-    sec_schemes['status'] = true;
+    var statusValue: boolean = this.checkOAuth2Urls(sec_schemes);
+    sec_schemes['status'] = statusValue;
     return sec_schemes;
+}
+
+//Checks that OAuth2 authorization and token URLs in security schemes are valid url
+checkOAuth2Urls(sec_schemes: any): boolean {
+    var returnValue: boolean;
+    returnValue = true;
+    //Go through all the different schemes
+    for (var secScheme in sec_schemes) {
+        var schemeType = sec_schemes[secScheme]['type'];
+        //If the scheme uses oauth2
+        if (schemeType === "oauth2") {
+            var flows = sec_schemes[secScheme]['flows'];
+            //Go through the different flows
+            for (var flowType in flows) {
+               
+                if (sec_schemes[secScheme]['flows'][flowType]['authorizationUrl'] !== undefined) {
+                    var authorizationUrl = sec_schemes[secScheme]['flows'][flowType]['authorizationUrl'];
+                    //If the authorization url is not a valid url
+                    if (!validUrl.isUri(authorizationUrl)) {
+                        sec_schemes[secScheme]['flows'][flowType]['status'] = false;     
+                        returnValue = false;
+                    //If the authorization url is a valid url 
+                    } else {
+                        sec_schemes[secScheme]['flows'][flowType]['status'] = true; 
+                    }
+                }
+                
+                if (sec_schemes[secScheme]['flows'][flowType]['tokenUrl'] !== undefined) {
+                    var tokenUrl = sec_schemes[secScheme]['flows'][flowType]['tokenUrl'];
+                    //If the token url is not a valid url
+                    if (!validUrl.isUri(tokenUrl)) {
+                        sec_schemes[secScheme]['flows'][flowType]['status'] = false;   
+                        returnValue = false;
+                    //If the token url is a valid url    
+                    } else {
+                        sec_schemes[secScheme]['flows'][flowType]['status'] = true; 
+                    }
+                }
+            }
+           
+        }
+     }
+     return returnValue;
+
 }
 
 //Check whether global security field is defined && that it is not an empty array
@@ -72,7 +118,6 @@ checkSecurityField() {
     
     
     sec_field['status'] = true;
-    console.log(sec_field);
     return sec_field;
 }
 
