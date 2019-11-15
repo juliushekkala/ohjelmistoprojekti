@@ -79,32 +79,41 @@ checkParamSchemas() {
 
 checkSchemas() {
     var contract = this.yaml;
+    var schemas: {[index: string]:any} = {};
     for (let field in contract) {
         if (typeof contract[field] === 'object') {
-            var x = Object.keys(contract[field]);
-            console.log(x);
-            if ('schema' in contract[field]) {
-                console.log(field);
-            }
+            let subObject = contract[field];
+            this.findTargets('schema', subObject, schemas, field);
         }
     }
+    return schemas;
 }
 
-findSchemas(obj: any, schemas: any, location: string) {
+public findTargets(target: string, obj: any, collection: any, location: string) {
+    //Recursively looks for occurrances of target in obj
+    //Found occurrances and their location is saved in collection
+    //console.log('In location: ' + location);
     for (let field in obj) {
         if (typeof obj[field] === 'object') {
-            if (obj[field]['schema'] !== undefined) {
-                
+            if (obj[field][target] !== undefined) {
+                let schema_location = location + '/' +  field + '/' + target;
+                collection[schema_location] = obj[field][target];
+            }
+            else {
+                let subObject = obj[field];
+                let subLocation = location + '/' + field;
+                this.findTargets(target, subObject, collection, subLocation);
             }
         }
     }
+    return;
 }
 
 
 public checkDataValidation() {
     var data_object: {[index: string]:any} = {};
     data_object['param_schemas'] = this.checkParamSchemas();
-    this.checkSchemas();
+    data_object['schemas'] = this.checkSchemas();
     return data_object;
 }
 }
@@ -112,7 +121,7 @@ public checkDataValidation() {
 //Everything below is testing only and should always be commented out before committing changes
 
 try {
-    var ymlfile = yaml.safeLoad(fs.readFileSync('test/petstore.yaml', 'utf8'));
+    var ymlfile = yaml.safeLoad(fs.readFileSync('test/link.yaml', 'utf8'));
 } catch (e) {
     console.log(e);
 }
