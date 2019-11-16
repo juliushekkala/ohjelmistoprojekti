@@ -26,12 +26,19 @@ Checks if each parameter object has a schema defined
 Schemas limit accepted inputs (SQL injections)
 Status is false if problems were found in a path. Paths with problems can be found in key locations (array)
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Empty schema check, component schema search
 key = param_schemas
 
 ## checkSchemas
 First finds all schemas in API, then checks for vulnerabilities for each schema
 key = schemas
+<<<<<<< HEAD
 Includes many subobject for different tests, each have their own status
 =======
 key = param_schemas
 >>>>>>> Work on paramschemas
+=======
+Includes many subobject for different tests, each have their own status
+>>>>>>> Empty schema check, component schema search

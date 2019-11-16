@@ -14,7 +14,7 @@ export class Datavalidationcheck {
 checkParamSchemas() {
     //Checks if each parameter object has a schema defined
     //Schemas limit accepted inputs (SQL injections)
-    // Does NOT recognize entirely missing parameters as an error, just missing schemas
+    //Does NOT recognize entirely missing parameters as an error, just missing schemas
     var paths = this.yaml.paths;
     var problemparams: {[index: string]:any} = {};
     problemparams['status'] = true;
@@ -80,13 +80,36 @@ checkParamSchemas() {
 checkSchemas() {
     var contract = this.yaml;
     var schemas: {[index: string]:any} = {};
+    var schema_check: {[index: string]:any} = {};
     for (let field in contract) {
+        if (field === 'components') {
+            for (let schema in contract['components']['schemas']) {
+                let componentLocation = 'components/schemas' + '/' + schema;
+                schemas[componentLocation] = contract['components']['schemas'][schema];
+            }
+        }
         if (typeof contract[field] === 'object') {
             let subObject = contract[field];
             this.findTargets('schema', subObject, schemas, field);
         }
     }
-    return schemas;
+    schema_check['empty_schemas'] = this.emptySchemas(schemas);
+    return schema_check;
+}
+
+emptySchemas(schemas: any) {
+    var empty_schemas: {[index: string]:any} = {};
+    empty_schemas['status'] = true;
+    empty_schemas.locations = [];
+    for (let schema in schemas) {
+        if (Object.keys(schemas[schema]).length < 1) {
+            empty_schemas.locations.push(schema);
+            if (empty_schemas['status']) {
+                empty_schemas['status'] = false;
+            }
+        }
+    }
+    return empty_schemas;
 }
 
 public findTargets(target: string, obj: any, collection: any, location: string) {
@@ -119,14 +142,16 @@ public checkDataValidation() {
 }
 
 //Everything below is testing only and should always be commented out before committing changes
-
+/*
 try {
-    var ymlfile = yaml.safeLoad(fs.readFileSync('test/link.yaml', 'utf8'));
+    var ymlfile = yaml.safeLoad(fs.readFileSync('test/petstore.yaml', 'utf8'));
 } catch (e) {
     console.log(e);
 }
 
 let Datacheck = new Datavalidationcheck(ymlfile);
 
-var schemes = Datacheck.checkDataValidation();
-console.log(schemes);
+var data = Datacheck.checkDataValidation();
+console.log(data);
+console.log(data['schemas']['empty_schemas']['locations']);
+*/
