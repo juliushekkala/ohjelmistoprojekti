@@ -61,7 +61,8 @@ checkOAuth2Urls(sec_schemes: any): boolean {
                     var authorizationUrl = sec_schemes[secScheme]['flows'][flowType]['authorizationUrl'];
                     //If the authorization url is not a valid https url
                     if (!validUrl.isHttpsUri(authorizationUrl)) {
-                        sec_schemes[secScheme]['flows'][flowType]['status'] = false;     
+                        sec_schemes[secScheme]['flows'][flowType]['status'] = false;
+                        sec_schemes[authorizationUrl] = false;     
                         returnValue = false;
                     //If the authorization url is a valid https url 
                     } else {
@@ -73,7 +74,8 @@ checkOAuth2Urls(sec_schemes: any): boolean {
                     var tokenUrl = sec_schemes[secScheme]['flows'][flowType]['tokenUrl'];
                     //If the token url is not a valid https url
                     if (!validUrl.isHttpsUri(tokenUrl)) {
-                        sec_schemes[secScheme]['flows'][flowType]['status'] = false;   
+                        sec_schemes[secScheme]['flows'][flowType]['status'] = false;
+                        sec_schemes[tokenUrl] = false;        
                         returnValue = false;
                     //If the token url is a valid https url    
                     } else {
