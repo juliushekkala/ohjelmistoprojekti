@@ -44,7 +44,7 @@ checkSecurityScheme() {
     return sec_schemes;
 }
 
-//Checks that OAuth2 authorization and token URLs in security schemes are valid url
+//Checks that OAuth2 authorization and token URLs in security schemes are valid HTTPS URLs
 checkOAuth2Urls(sec_schemes: any): boolean {
     var returnValue: boolean;
     returnValue = true;
@@ -59,11 +59,11 @@ checkOAuth2Urls(sec_schemes: any): boolean {
                
                 if (sec_schemes[secScheme]['flows'][flowType]['authorizationUrl'] !== undefined) {
                     var authorizationUrl = sec_schemes[secScheme]['flows'][flowType]['authorizationUrl'];
-                    //If the authorization url is not a valid url
-                    if (!validUrl.isUri(authorizationUrl)) {
+                    //If the authorization url is not a valid https url
+                    if (!validUrl.isHttpsUri(authorizationUrl)) {
                         sec_schemes[secScheme]['flows'][flowType]['status'] = false;     
                         returnValue = false;
-                    //If the authorization url is a valid url 
+                    //If the authorization url is a valid https url 
                     } else {
                         sec_schemes[secScheme]['flows'][flowType]['status'] = true; 
                     }
@@ -71,11 +71,11 @@ checkOAuth2Urls(sec_schemes: any): boolean {
                 
                 if (sec_schemes[secScheme]['flows'][flowType]['tokenUrl'] !== undefined) {
                     var tokenUrl = sec_schemes[secScheme]['flows'][flowType]['tokenUrl'];
-                    //If the token url is not a valid url
-                    if (!validUrl.isUri(tokenUrl)) {
+                    //If the token url is not a valid https url
+                    if (!validUrl.isHttpsUri(tokenUrl)) {
                         sec_schemes[secScheme]['flows'][flowType]['status'] = false;   
                         returnValue = false;
-                    //If the token url is a valid url    
+                    //If the token url is a valid https url    
                     } else {
                         sec_schemes[secScheme]['flows'][flowType]['status'] = true; 
                     }
@@ -91,6 +91,7 @@ checkOAuth2Urls(sec_schemes: any): boolean {
 //Check whether global security field is defined && that it is not an empty array
 checkSecurityField() {
     var sec_field = this.yaml.security;
+    //console.log(sec_field);
     //not defined
     if (typeof sec_field === "undefined") {
         let sec_field: {[index: string]:boolean} = {};
@@ -105,7 +106,7 @@ checkSecurityField() {
         return sec_field;  
     }
 
-    //if there are empty security requirements (as in just "- {}"))
+    //if there are empty security requirements in a list(as in just "- {}"))
     if (sec_field.length > 0) {
         for (var sec in sec_field) {
             if (Object.keys(sec_field[sec]).length === 0) {
@@ -113,6 +114,14 @@ checkSecurityField() {
                 sec_field['status'] = false;
                 return sec_field;  
             }
+        }
+    }
+    //If the global security field is an empty object (as in "{}")
+    if (typeof sec_field === "object") {
+        if (Object.keys(sec_field).length === 0) {
+            let sec_field: {[index: string]:boolean} = {};
+                sec_field['status'] = false;
+                return sec_field;  
         }
     }
     
