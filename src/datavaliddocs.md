@@ -14,12 +14,15 @@ Current sample straight from terminal
   schemas:
    { status: false,
      empty_schemas: { status: false, locations: [Array] } } }
+<<<<<<< HEAD
 =======
 Also includes the path for the problems, locations -key
 >>>>>>> Work on paramschemas
 =======
 Also includes the path for (if applicable) the problems, locations -key
 >>>>>>> Started work on finding schemas from api
+=======
+>>>>>>> Object example added
 
 ## checkParamSchemas
 Checks if each parameter object has a schema defined
