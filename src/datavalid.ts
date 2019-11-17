@@ -81,6 +81,7 @@ checkSchemas() {
     var contract = this.yaml;
     var schemas: {[index: string]:any} = {};
     var schema_check: {[index: string]:any} = {};
+    schema_check['status'] = true;
     for (let field in contract) {
         if (field === 'components') {
             for (let schema in contract['components']['schemas']) {
@@ -94,6 +95,9 @@ checkSchemas() {
         }
     }
     schema_check['empty_schemas'] = this.emptySchemas(schemas);
+    if (!schema_check['empty_schemas']['status']) {
+        schema_check['status'] = false;
+    }
     return schema_check;
 }
 
@@ -153,5 +157,4 @@ let Datacheck = new Datavalidationcheck(ymlfile);
 
 var data = Datacheck.checkDataValidation();
 console.log(data);
-console.log(data['schemas']['empty_schemas']['locations']);
 */
