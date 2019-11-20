@@ -58,9 +58,6 @@ export function activate(context: vscode.ExtensionContext) {
 		let Apicheck = new readapi.Apicheck(ymlfile);
 		var servers_here = Apicheck.checkSecurity();
 		messages.security(servers_here);
-<<<<<<< HEAD
-=======
-		
 
 		//Run the tests from datavalid
 		let Datavalid = new datavalid.Datavalidationcheck(ymlfile);
@@ -69,8 +66,6 @@ export function activate(context: vscode.ExtensionContext) {
 		//security is not the correct one here, but for testing its close enough
 		//or maybe everything can be put into same function...
 		messages.security(validations);
-
->>>>>>> Merged branches 20112019
 
 		//Finally, print the ending time
 		messages.time('Tests ended at: ');
