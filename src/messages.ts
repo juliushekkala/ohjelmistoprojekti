@@ -88,9 +88,6 @@ export function security(servers_here: { [index: string]: any; }) {
                 flawcause = "Undefined or empty";
                 allgood = "Global security field exists and is not empty";
                 break;
-        
-
-
 
             //unknown test
             default :				
@@ -102,6 +99,7 @@ export function security(servers_here: { [index: string]: any; }) {
         }
     
         //Print the current test number
+        outChannel.appendLine("Test key: " + key);
         outChannel.appendLine("Test" + securitytests + ": " + teststart);
     
         //printing the results only if the status bit of that value is false == error
