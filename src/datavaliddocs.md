@@ -22,4 +22,8 @@ key = param_schemas
 ## checkSchemas
 First finds all schemas in API, then checks for vulnerabilities for each schema
 key = schemas
+<<<<<<< HEAD
 Includes many subobject for different tests, each have their own status
+=======
+Includes many subobject for different tests, each have their own status
+>>>>>>> a16e918f2ed1945c67b33df1f0a878276c9be6a7
