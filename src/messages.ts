@@ -5,8 +5,8 @@ const outChannel = vscode.window.createOutputChannel('openAPI yaml tester');
 
 //total number of tests, all modules, starts from zero (maybe needs var?)
 //different names for functions, so those can be returned if needed somewhere else
-let totaltests = 0;
-let securitytests = 0;
+let totalTests = 0;
+let securityTests = 0;
 
 //sets up output window for all other modules, clears it and shows it automatically
 export function start() {
@@ -49,44 +49,44 @@ export function security(servers_here: { [index: string]: any; }) {
 	for (let key in servers_here) {
         let value = servers_here[key];
         //Increase the number of the test, so the total and current can be printed
-        securitytests++;
+        securityTests++;
     
         //Need to declare the strings to be used first
-        let teststart = "";
+        let testing = "";
         let exploit = "";
-        let flawcause = "";
-        let allgood = "";
+        let cause = "";
+        let nice = "";
     
         //Change the strings according to the test name
         switch (key) {
         
             //addr_list
             case "addr_list" :
-                teststart = "Checking if there are http-addresses instead of https:";
+                testing = "Checking if there are http-addresses instead of https:";
                 exploit = "By not having a https server the api is vulnerable for wifi attacks";
-                flawcause = " -> is not https!";
-                allgood = "Urls seem to be ok, thats good!";
+                cause = " -> is not https!";
+                nice = "Urls seem to be ok, thats good!";
                 break;
             
             //sec_schemes
             case "sec_schemes" :				
-                teststart = "Checking sec schemes:";
+                testing = "Checking sec schemes:";
                 exploit = "Scheme exploit possible";
-                flawcause = " -> this is wrong";
-                allgood = "Security schemes seem to be ok";
+                cause = " -> this is wrong";
+                nice = "Security schemes seem to be ok";
                 break;
         
             //unknown test
             default :				
-                teststart = "Starting a test, which I don't yet know";
+                testing = "Starting a test, which I don't yet know";
                 exploit = "Scheme exploit possible, don't know the exploit";
-                flawcause = " -> this is wrong, don't know what it is";
-                allgood = "Test was ok, don't know what was tested";
+                cause = " -> this is wrong, don't know what it is";
+                nice = "Test was ok, don't know what was tested";
                 break;
         }
     
         //Print the current test number
-        outChannel.appendLine("Test" + securitytests + ": " + teststart);
+        outChannel.appendLine("Test " + securityTests + ": " + testing);
     
         //printing the results only if the status bit of that value is false == error
         if (value["status"] === false){
@@ -97,7 +97,7 @@ export function security(servers_here: { [index: string]: any; }) {
                 }
             //but for other errors, print the flaw and the cause
                 if (value[flaw] === false) {
-                    outChannel.appendLine(flaw + flawcause);
+                    outChannel.appendLine(flaw + cause);
                 }
             }
             //Print the possible exploit for these flaws
@@ -106,14 +106,14 @@ export function security(servers_here: { [index: string]: any; }) {
 
         //Otherwise, if no errors found, just print that the test was successful
         else {
-            outChannel.appendLine(allgood);
+            outChannel.appendLine(nice);
         }
     
         //The current test portion has now finished, starting new test (back to the start of the for-loop)
     }
 
     //Security testing ended, give total results, this total needs to be used again in next modules
-    outChannel.appendLine("Tested " + securitytests + " test modules in this function");
-    totaltests =+ securitytests;
-    outChannel.appendLine("Tested " + totaltests + " in all test modules");
+    outChannel.appendLine("Tested " + securityTests + " test modules in this function");
+    totalTests =+ securityTests;
+    outChannel.appendLine("Tested " + totalTests + " in all test modules");
 }

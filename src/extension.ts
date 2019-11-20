@@ -19,6 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('extension.helloWorld', () => {
+		
 		// The code you place here will be executed every time your command is executed
 
 		// Display a message box to the user (in the lower right corner)
@@ -30,7 +31,8 @@ export function activate(context: vscode.ExtensionContext) {
 		//Find current time
 		messages.time('Starting tests at: ');
 
-		var currentlyOpenTabfilePath = "hello.txt";
+		//var currentlyOpenTabfilePath = "hello.txt";
+		var currentlyOpenTabfilePath = "";
 		//from https://stackoverflow.com/a/42637468 
 		//Get the path of the currently open file
 		if (typeof vscode.window.activeTextEditor !== 'undefined') {
@@ -47,23 +49,18 @@ export function activate(context: vscode.ExtensionContext) {
 		try {
 			var ymlfile = yaml.safeLoad(fs.readFileSync(currentlyOpenTabfilePath, 'utf8'));
 		} catch (e) {
-			vscode.window.showInformationMessage("failure :D");
+			vscode.window.showInformationMessage("Can't open file");
 		}
 		
 		//Run the security tests from readapi
+		//Iterate through those results and show them to the user. 
 		let Apicheck = new readapi.Apicheck(ymlfile);
 		var servers_here = Apicheck.checkSecurity();
-		//Iterate through the results and show them to the user. 
 		messages.security(servers_here);
-		
+
 		//Finally, print the ending time
 		messages.time('Tests ended at: ');
 	}
-
-	
-
-	
-
 	); context.subscriptions.push(disposable);}
 
 // this method is called when your extension is deactivated
