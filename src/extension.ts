@@ -3,6 +3,7 @@
 import * as vscode from 'vscode';
 import * as readapi from "./readapi";
 import * as messages from "./messages";
+import * as datavalid from "./datavalid";
 
 const yaml = require('js-yaml');
 const fs = require('fs');
@@ -57,9 +58,24 @@ export function activate(context: vscode.ExtensionContext) {
 		let Apicheck = new readapi.Apicheck(ymlfile);
 		var servers_here = Apicheck.checkSecurity();
 		messages.security(servers_here);
+<<<<<<< HEAD
+=======
+		
+
+		//Run the tests from datavalid
+		let Datavalid = new datavalid.Datavalidationcheck(ymlfile);
+		var validations = Datavalid.checkDataValidation();
+		//Iterate through the results and show them to the user. 
+		//security is not the correct one here, but for testing its close enough
+		//or maybe everything can be put into same function...
+		messages.security(validations);
+
+>>>>>>> Merged branches 20112019
 
 		//Finally, print the ending time
 		messages.time('Tests ended at: ');
+		//reset counters for tests run
+		messages.reset();
 	}
 	); context.subscriptions.push(disposable);}
 

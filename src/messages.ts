@@ -8,6 +8,11 @@ const outChannel = vscode.window.createOutputChannel('openAPI yaml tester');
 let totalTests = 0;
 let securityTests = 0;
 
+export function reset() {
+    totaltests = 0;
+    securitytests = 0;
+    }
+
 //sets up output window for all other modules, clears it and shows it automatically
 export function start() {
     outChannel.clear();
@@ -76,6 +81,17 @@ export function security(servers_here: { [index: string]: any; }) {
                 nice = "Security schemes seem to be ok";
                 break;
         
+            //data valid
+            case "sec_field" :				
+                teststart = "Checking whether global security field exists and it is not empty:";
+                exploit = "Global security field not defined or is empty";
+                flawcause = "Undefined or empty";
+                allgood = "Global security field exists and is not empty";
+                break;
+        
+
+
+
             //unknown test
             default :				
                 testing = "Starting a test, which I don't yet know";
