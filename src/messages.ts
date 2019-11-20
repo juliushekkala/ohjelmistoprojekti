@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+const winston = require('winston');
 
 //defining outChannel for the module
 const outChannel = vscode.window.createOutputChannel('openAPI yaml tester');
@@ -8,10 +9,46 @@ const outChannel = vscode.window.createOutputChannel('openAPI yaml tester');
 let totalTests = 0;
 let securityTests = 0;
 
+//set the file params
+let logFileDir = ".out/";
+let logFileName = "winston.txt";
+let debugLogFileName = "debug.txt";
+//https://stackoverflow.com/questions/55583723/creating-a-log-file-for-a-vscode-extension
+
+//const logger: winston.Logger = winston.createLogger({
+const logger = winston.createLogger({
+    level: 'debug',
+    format: winston.format.combine(
+        winston.format.simple(),
+        winston.format.timestamp({
+            format: 'YYYY-MM-DD HH:mm:ss'
+        }),
+        winston.format.printf((info: { timestamp: any; level: any; message: any; }) => `${info.timestamp} ${info.level}: ${info.message}`)
+    ),
+    transports: [
+        new winston.transports.File({
+            level: 'info',
+            dirname: logFileDir,
+            filename: logFileName
+        }),
+        new winston.transports.File({
+            level: 'debug',
+            dirname: logFileDir,
+            filename: debugLogFileName
+        })
+    ]
+});
+    
+
+
+
 export function reset() {
     totalTests = 0;
     securityTests = 0;
+    logger.info("whatever");
     }
+
+
 
 //sets up output window for all other modules, clears it and shows it automatically
 export function start() {
@@ -89,9 +126,6 @@ export function security(servers_here: { [index: string]: any; }) {
                 nice = "Global security field exists and is not empty";
                 break;
         
-
-
-
             //unknown test
             default :				
                 testing = "Starting a test, which I don't yet know";
@@ -101,8 +135,9 @@ export function security(servers_here: { [index: string]: any; }) {
                 break;
         }
     
-        //Print the current test number
+        //Print the current test number and the "key"
         outChannel.appendLine("Test " + securityTests + ": " + key);
+        //print the starting line
         outChannel.appendLine(testing);
     
         //printing the results only if the status bit of that value is false == error
