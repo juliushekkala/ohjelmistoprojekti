@@ -9,8 +9,8 @@ let totalTests = 0;
 let securityTests = 0;
 
 export function reset() {
-    totaltests = 0;
-    securitytests = 0;
+    totalTests = 0;
+    securityTests = 0;
     }
 
 //sets up output window for all other modules, clears it and shows it automatically
@@ -83,10 +83,10 @@ export function security(servers_here: { [index: string]: any; }) {
         
             //data valid
             case "sec_field" :				
-                teststart = "Checking whether global security field exists and it is not empty:";
+                testing = "Checking whether global security field exists and it is not empty:";
                 exploit = "Global security field not defined or is empty";
-                flawcause = "Undefined or empty";
-                allgood = "Global security field exists and is not empty";
+                cause = "Undefined or empty";
+                nice = "Global security field exists and is not empty";
                 break;
         
 
@@ -102,7 +102,8 @@ export function security(servers_here: { [index: string]: any; }) {
         }
     
         //Print the current test number
-        outChannel.appendLine("Test " + securityTests + ": " + testing);
+        outChannel.appendLine("Test " + securityTests + ": " + key);
+        outChannel.appendLine(testing);
     
         //printing the results only if the status bit of that value is false == error
         if (value["status"] === false){
