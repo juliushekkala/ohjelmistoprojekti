@@ -98,6 +98,10 @@ checkSchemas() {
     if (!schema_check['empty_schemas']['status']) {
         schema_check['status'] = false;
     }
+    schema_check['array_schemas'] = this.arraySchemaIssues(schemas);
+    if (!schema_check['array_schemas']['status']) {
+        schema_check['status'] = false;
+    }
     return schema_check;
 }
 
@@ -114,6 +118,59 @@ emptySchemas(schemas: any) {
         }
     }
     return empty_schemas;
+}
+
+arraySchemaIssues(schemas: any) {
+    //Checks schemas with type: 'array'
+    var array_schemas: {[index: string]:any} = {};
+    array_schemas['status'] = true;
+    array_schemas.locations = [];
+    for (let schema in schemas) {
+        let schematype = schemas[schema]['type'];
+        if (schematype === 'object') {
+            if (schemas[schema]['properties'] !== undefined) {
+                let typeschemas: {[index: string]:any} = {};
+                let statbool = true;
+                this.findSchemasOfType('array', schemas[schema]['properties'], typeschemas);
+                for (let typeschema in typeschemas) {
+                    if (typeschemas[typeschema]['maxItems'] === undefined) {
+                        if (!statbool) {
+                            array_schemas.locations.push(schema);
+                            if (array_schemas['status']) {
+                                array_schemas['status'] = false;
+                            }
+                        }
+                        statbool = false;
+                    }
+                }
+            }
+        }
+        else if (schematype === 'array') {
+            if (schemas[schema]['maxItems'] === undefined) {
+                array_schemas.locations.push(schema);
+                if (array_schemas['status']) {
+                    array_schemas['status'] = false;
+                }
+            }
+        }
+    }
+    return array_schemas;
+}
+
+findSchemasOfType(type: string, props: any, collection: any) {
+    //For finding schemas within schemas
+    for (let schema in props) {
+        let schematype = props[schema]['type'];
+        if (schematype === 'object') {
+            if (props[schema]['properties'] !== undefined) {
+                this.findSchemasOfType(type, props[schema]['properties'], collection);
+            }
+        }
+        else if (schematype === type) {
+            collection[schema] = props[schema];
+        }
+    }
+    return;
 }
 
 public findTargets(target: string, obj: any, collection: any, location: string) {
@@ -141,6 +198,7 @@ public checkDataValidation() {
     var data_object: {[index: string]:any} = {};
     data_object['param_schemas'] = this.checkParamSchemas();
     data_object['schemas'] = this.checkSchemas();
+    //console.log(data_object);
     return data_object;
 }
 }
