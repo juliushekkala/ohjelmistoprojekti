@@ -1,3 +1,5 @@
+import * as datavalid from "./datavalid";
+
 const yaml = require('js-yaml');
 const fs   = require('fs');
 const validUrl = require('valid-url');
@@ -132,11 +134,57 @@ checkSecurityField() {
     return sec_field;
 }
 
+//Checks the correctness of different response definitions. 
+responseCheck() {
+    //Use the Json object parser found in datavalid.ts
+    let targetFinder = new datavalid.Datavalidationcheck(this.yaml);
+    var responses: {[index: string]:any} = {};
+    let field = this.yaml.paths; 
+    if (typeof field === 'object') {
+        //Find all response definitions in the yaml
+        targetFinder.findTargets('responses', field, responses, 'paths');
+    }
+    
+    //Go through the different responses
+    for (var response in responses) {
+        //Split the location string    
+        var resp = response.split("/");
+        //Get the operation that the response codes refer to 
+        var operation = resp[resp.length - 2];
+        //For each response code
+        for (var responseCode in responses[response]) {
+            //Check if 400 response code is defined
+            if (operation !== "head" && responses[response]['400status'] !== true) {
+                if (responseCode === '400') {
+                    responses[response]['400status'] = true;
+                    
+                } else {
+                    responses[response]['400status'] = false;
+                }
+            }
+            //Check if GET, PUT, HEAD and DELETE operations have their 404 response defined
+            if (operation === "get" || operation === "put" || operation === "head" || operation === "delete") {
+                if (responseCode === '404') {
+                    responses[response]['404status'] = true;
+                    
+                } else {
+                    responses[response]['404status'] = false;
+                }
+            }
+
+        }
+    }
+    return responses;
+
+}
+
 public checkSecurity() {
     var api_object: {[index: string]:any} = {};
     api_object['addr_list'] = this.checkHTTP();
     api_object['sec_schemes'] = this.checkSecurityScheme();
     api_object['sec_field'] = this.checkSecurityField();
+    api_object['responses'] = this.responseCheck();
+    console.log(api_object);
     return api_object;
 }
 }
