@@ -19,17 +19,20 @@ checkHTTP() {
     var addr_list: {[index: string]:any} = {};
 
     //Go through servers, check if their urls start with https and update object accordingly
-    for (var server of servers) {
-        var address = server['url'];
-        //console.log(address);
-        if (address.startsWith("https")){
-            addr_list[address] = true;
-        }
-        else {
-            addr_list[address] = false;
-            addr_list['status'] = false;
+    if (typeof servers !== "undefined") {
+        for (var server of servers) {
+            var address = server['url'];
+            //console.log(address);
+            if (address.startsWith("https")){
+                addr_list[address] = true;
+            }
+            else {
+                addr_list[address] = false;
+                addr_list['status'] = false;
+            }
         }
     }
+   
     //console.log(addrlist);
     return addr_list;
 }
