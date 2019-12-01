@@ -122,6 +122,8 @@ emptySchemas(schemas: any) {
 
 arraySchemaIssues(schemas: any) {
     //Checks schemas with type: 'array'
+    //Checks if schemas have maxItems and types of items defined
+    //Failure in this test can expose the server to attacks where unexpected data or large quantities of data is sent
     var array_schemas: {[index: string]:any} = {};
     array_schemas['status'] = true;
     array_schemas.locations = [];
@@ -130,11 +132,20 @@ arraySchemaIssues(schemas: any) {
         if (schematype === 'object') {
             if (schemas[schema]['properties'] !== undefined) {
                 let typeschemas: {[index: string]:any} = {};
-                let statbool = true;
+                let statbool = true; //Schemas should be added to array_schemas only once
                 this.findSchemasOfType('array', schemas[schema]['properties'], typeschemas);
                 for (let typeschema in typeschemas) {
                     if (typeschemas[typeschema]['maxItems'] === undefined) {
-                        if (!statbool) {
+                        if (statbool) {
+                            array_schemas.locations.push(schema);
+                            if (array_schemas['status']) {
+                                array_schemas['status'] = false;
+                            }
+                        }
+                        statbool = false;
+                    }
+                    else if (schemas[schema]['items']['type'] === undefined && schemas[schema]['items']['$ref'] === undefined) {
+                        if (statbool) {
                             array_schemas.locations.push(schema);
                             if (array_schemas['status']) {
                                 array_schemas['status'] = false;
@@ -147,6 +158,12 @@ arraySchemaIssues(schemas: any) {
         }
         else if (schematype === 'array') {
             if (schemas[schema]['maxItems'] === undefined) {
+                array_schemas.locations.push(schema);
+                if (array_schemas['status']) {
+                    array_schemas['status'] = false;
+                }
+            }
+            else if (schemas[schema]['items']['type'] === undefined && schemas[schema]['items']['$ref'] === undefined) {
                 array_schemas.locations.push(schema);
                 if (array_schemas['status']) {
                     array_schemas['status'] = false;
