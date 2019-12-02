@@ -176,6 +176,8 @@ arraySchemaIssues(schemas: any) {
 
 numericSchemaIssues(schemas: any) {
     //Checks schemas with types 'integer' and 'number'
+    //Checks if schemas have proper formats, (int64, int32 or float, double)
+    //Unspecified format can lead to unexpected errors when unexpected inputs are used
     var numeric_schemas: {[index: string]:any} = {};
     numeric_schemas['status'] = true;
     numeric_schemas.locations = [];
@@ -184,13 +186,19 @@ numericSchemaIssues(schemas: any) {
         if (schematype === 'object') {
             if (schemas[schema]['properties'] !== undefined) {
                 let typeschemas: {[index: string]:any} = {};
-                let statbool = true; //Schemas should be added to array_schemas only once
+                let statbool = true; //Schemas should be added to numeric_schemas only once
                 this.findSchemasOfType('integer', schemas[schema]['properties'], typeschemas);
+                this.findSchemasOfType('number', schemas[schema]['properties'], typeschemas);
                 
                 
             }
         }
         else if (schematype === 'integer') {
+            if (schemas[schema]['format'] !== "int32" && schemas[schema]['format'] !== "int64") {
+                numeric_schemas.locations.push(schema);
+            }
+        }
+        else if (schematype === 'number') {
             
         }
     }
