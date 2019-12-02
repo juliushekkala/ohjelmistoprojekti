@@ -32,3 +32,9 @@ Checks schemas with type: 'array'
 Checks if schemas have maxItems and types of items defined
 Failure in this test can expose the server to attacks where unexpected data or large quantities of data is sent.
 key = array_schemas
+
+## numericSchemaIssues
+Checks schemas with types 'integer' and 'number'
+Checks if schemas have appropriate formats and maximum and minimum defined
+Failure in this test can expose the server to attacks with unexpected inputs. This can lead to server crashes.
+key = numeric_schemas

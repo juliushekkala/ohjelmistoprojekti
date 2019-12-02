@@ -102,6 +102,10 @@ checkSchemas() {
     if (!schema_check['array_schemas']['status']) {
         schema_check['status'] = false;
     }
+    schema_check['numeric_schemas'] = this.numericSchemaIssues(schemas);
+    if (!schema_check['numeric_schemas']['status']) {
+        schema_check['status'] = false;
+    }
     return schema_check;
 }
 
@@ -189,7 +193,40 @@ numericSchemaIssues(schemas: any) {
                 let statbool = true; //Schemas should be added to numeric_schemas only once
                 this.findSchemasOfType('integer', schemas[schema]['properties'], typeschemas);
                 this.findSchemasOfType('number', schemas[schema]['properties'], typeschemas);
-                
+                for (let typeschema in typeschemas) {
+                    if (typeschemas[typeschema]['type'] === 'integer') { 
+                        if (typeschemas[typeschema]['format'] !== 'int32' && typeschemas[typeschema]['format'] !== 'int64' && statbool) { //Expected input to cut down possible attack vectors
+                            numeric_schemas.locations.push(schema);
+                            if (numeric_schemas['status']) {
+                                numeric_schemas['status'] = false;
+                            }
+                            statbool = false;
+                        }
+                        else if ((typeschemas[typeschema]['maximum'] === undefined ||  typeschemas[typeschema]['minimum'] === undefined) && statbool) { //Maximum and minimum values to limit attack vectors
+                            numeric_schemas.locations.push(schema);
+                            if (numeric_schemas['status']) {
+                                numeric_schemas['status'] = false;
+                            }
+                            statbool = false;
+                        }
+                    }
+                    if (typeschemas[typeschema]['type'] === 'number') {
+                        if (typeschemas[typeschema]['format'] !== 'float' && typeschemas[typeschema]['format'] !== 'double' && statbool) {
+                            numeric_schemas.locations.push(schema);
+                            if (numeric_schemas['status']) {
+                                numeric_schemas['status'] = false;
+                            }
+                            statbool = false;
+                        }
+                        else if ((typeschemas[typeschema]['maximum'] === undefined ||  typeschemas[typeschema]['minimum'] === undefined) && statbool) { //Maximum and minimum values to limit attack vectors
+                            numeric_schemas.locations.push(schema);
+                            if (numeric_schemas['status']) {
+                                numeric_schemas['status'] = false;
+                            }
+                            statbool = false;
+                        }
+                    }
+                }
                 
             }
         }
@@ -197,9 +234,17 @@ numericSchemaIssues(schemas: any) {
             if (schemas[schema]['format'] !== "int32" && schemas[schema]['format'] !== "int64") {
                 numeric_schemas.locations.push(schema);
             }
+            else if (schemas[schema]['maximum'] === undefined || schemas[schema]['minimum'] === undefined) { //Maximum and minimum values to limit attack vectors
+                numeric_schemas.locations.push(schema);
+            }
         }
         else if (schematype === 'number') {
-            
+            if (schemas[schema]['format'] !== "float" && schemas[schema]['format'] !== "double") {
+                numeric_schemas.locations.push(schema);
+            }
+            else if (schemas[schema]['maximum'] === undefined || schemas[schema]['minimum'] === undefined) { //Maximum and minimum values to limit attack vectors
+                numeric_schemas.locations.push(schema);
+            }
         }
     }
     return numeric_schemas;
@@ -246,7 +291,7 @@ public checkDataValidation() {
     var data_object: {[index: string]:any} = {};
     data_object['param_schemas'] = this.checkParamSchemas();
     data_object['schemas'] = this.checkSchemas();
-    //console.log(data_object);
+    console.log(data_object);
     return data_object;
 }
 }
