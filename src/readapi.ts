@@ -196,6 +196,15 @@ responseCheck() {
                     responses[response]['404status'] = false;
                 }
             }
+            
+            //GET operations: Is a 200 or 202 response defined
+            if (operation === "get" && responses[response]['getStatus'] !== true) {
+                if (responseCode === '200' || responseCode === '202') {
+                    responses[response]['getStatus'] = true;
+                } else {
+                    responses[response]['getStatus'] = false;
+                }
+            }
 
             //OPTIONS operations should have 200 response code defined
             if (operation === "options" && responses[response]['oper200status'] !== true) {
@@ -204,6 +213,15 @@ responseCheck() {
                } else {
                    responses[response]['oper200status'] = false;
                }
+            }
+
+            //HEAD operations: Is a 200 or 202 response defined
+            if (operation === "head" && responses[response]['headStatus'] !== true) {
+                if (responseCode === '200' || responseCode === '202') {
+                    responses[response]['headStatus'] = true;
+                } else {
+                    responses[response]['headStatus'] = false;
+                }
             }
 
             
