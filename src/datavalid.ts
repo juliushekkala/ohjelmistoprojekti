@@ -174,6 +174,29 @@ arraySchemaIssues(schemas: any) {
     return array_schemas;
 }
 
+numericSchemaIssues(schemas: any) {
+    //Checks schemas with types 'integer' and 'number'
+    var numeric_schemas: {[index: string]:any} = {};
+    numeric_schemas['status'] = true;
+    numeric_schemas.locations = [];
+    for (let schema in schemas) {
+        let schematype = schemas[schema]['type'];
+        if (schematype === 'object') {
+            if (schemas[schema]['properties'] !== undefined) {
+                let typeschemas: {[index: string]:any} = {};
+                let statbool = true; //Schemas should be added to array_schemas only once
+                this.findSchemasOfType('integer', schemas[schema]['properties'], typeschemas);
+                
+                
+            }
+        }
+        else if (schematype === 'integer') {
+            
+        }
+    }
+    return numeric_schemas;
+}
+
 findSchemasOfType(type: string, props: any, collection: any) {
     //For finding schemas within schemas
     for (let schema in props) {
