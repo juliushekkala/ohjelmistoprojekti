@@ -156,17 +156,39 @@ responseCheck() {
         var operation = resp[resp.length - 2];
         //For each response code
         for (var responseCode in responses[response]) {
-            //Check if 400 response code is defined
-            if (operation !== "head" && responses[response]['400status'] !== true) {
-                if (responseCode === '400') {
-                    responses[response]['400status'] = true;
-                    
-                } else {
-                    responses[response]['400status'] = false;
+            
+            if (operation !== "head") {
+                //Check if 400 response code is defined
+                if (responses[response]['400status'] !== true) {
+                    if (responseCode === '400') {
+                        responses[response]['400status'] = true;
+                        
+                    } else {
+                        responses[response]['400status'] = false;
+                    }
+                }
+                //Check if 429 response code is defined 
+                if (responses[response]['429status'] !== true) {
+                    if (responseCode === '429') {
+                        responses[response]['429status'] = true;
+                        
+                    } else {
+                        responses[response]['429status'] = false;
+                    }
+                }
+                //Check if 500 response code is defined
+                if (responses[response]['500status'] !== true) {
+                    if (responseCode === '500') {
+                        responses[response]['500status'] = true;
+                        
+                    } else {
+                        responses[response]['500status'] = false;
+                    }
                 }
             }
+            
             //Check if GET, PUT, HEAD and DELETE operations have their 404 response defined
-            if (operation === "get" || operation === "put" || operation === "head" || operation === "delete") {
+            if ((operation === "get" || operation === "put" || operation === "head" || operation === "delete") && responses[response]['404status'] !== true) {
                 if (responseCode === '404') {
                     responses[response]['404status'] = true;
                     
@@ -174,6 +196,20 @@ responseCheck() {
                     responses[response]['404status'] = false;
                 }
             }
+
+            //OPTIONS operations should have 200 response code defined
+            if (operation === "options" && responses[response]['oper200status'] !== true) {
+               if (responseCode === '200') {
+                   responses[response]['oper200status'] = true;
+               } else {
+                   responses[response]['oper200status'] = false;
+               }
+            }
+
+            
+
+
+           
 
         }
     }
