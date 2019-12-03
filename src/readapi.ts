@@ -224,6 +224,41 @@ responseCheck() {
                 }
             }
 
+            //DELETE operations: Is a 200, 201, 202 or 204 response defined
+            if (operation === "delete" && responses[response]['deleteStatus'] !== true) {
+                if (responseCode === '200' || responseCode === '201' || responseCode === '202' || responseCode === '204') {
+                    responses[response]['deleteStatus'] = true;
+                } else {
+                    responses[response]['deleteStatus'] = false;
+                }
+            }
+
+            //PATCH operations: Is a 200, 201, 202 or 204 response defined
+            if (operation === "patch" && responses[response]['patchStatus'] !== true) {
+                if (responseCode === '200' || responseCode === '201' || responseCode === '202' || responseCode === '204') {
+                    responses[response]['patchStatus'] = true;
+                } else {
+                    responses[response]['patchStatus'] = false;
+                }
+            }
+
+            //POST operations: Is a 200, 201, 202 or 204 response defined
+            if (operation === "post" && responses[response]['postStatus'] !== true) {
+                if (responseCode === '200' || responseCode === '201' || responseCode === '202' || responseCode === '204') {
+                    responses[response]['postStatus'] = true;
+                } else {
+                    responses[response]['postStatus'] = false;
+                }
+            }
+
+            //PUT operations: Is a 200, 201, 202 or 204 response defined
+            if (operation === "put" && responses[response]['putStatus'] !== true) {
+                if (responseCode === '200' || responseCode === '201' || responseCode === '202' || responseCode === '204') {
+                    responses[response]['putStatus'] = true;
+                } else {
+                    responses[response]['putStatus'] = false;
+                }
+            }
             
 
 
