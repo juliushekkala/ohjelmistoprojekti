@@ -106,6 +106,14 @@ checkSchemas() {
     if (!schema_check['numeric_schemas']['status']) {
         schema_check['status'] = false;
     }
+    schema_check['string_schemas'] = this.stringSchemaIssues(schemas);
+    if (!schema_check['string_schemas']['status']) {
+        schema_check['status'] = false;
+    }
+    schema_check['object_schemas'] = this.objectSchemaIssues(schemas);
+    if (!schema_check['object_schemas']['status']) {
+        schema_check['status'] = false;
+    }
     return schema_check;
 }
 
