@@ -250,6 +250,63 @@ numericSchemaIssues(schemas: any) {
     return numeric_schemas;
 }
 
+stringSchemaIssues(schemas: any) {
+    //Checks schemas with type 'string'
+    //Checks if schemas have maximum string length and string pattern defined
+    //No maximum length can expose the server to overloading attacks. Lack of pattern could allow various attacks, including SQL injections
+    var string_schemas: {[index: string]:any} = {};
+    string_schemas['status'] = true;
+    string_schemas.locations = [];
+    for (let schema in schemas) {
+        let schematype = schemas[schema]['type'];
+        if (schematype === 'object') {
+            if (schemas[schema]['properties'] !== undefined) {
+                let typeschemas: {[index: string]:any} = {};
+                let statbool = true; //Schemas should be added to numeric_schemas only once
+                this.findSchemasOfType('string', schemas[schema]['properties'], typeschemas);
+                for (let typeschema in typeschemas) {
+                    if (typeschemas[typeschema]['maxLength'] === undefined || typeschemas[typeschema]['pattern'] === undefined) {
+                        if (statbool) {
+                            string_schemas.locations.push(schema);
+                            if (string_schemas['status']) {
+                                string_schemas['status'] = false;
+                            }
+                        }
+                        statbool = false;
+                    }
+                }
+            }
+        }
+        else if (schematype === 'string') {
+            if (schemas[schema]['maxLength'] === undefined || schemas[schema]['pattern'] === undefined) {
+                string_schemas.locations.push(schema);
+                if (string_schemas['status']) {
+                    string_schemas['status'] = false;
+                }
+            }
+        }
+    }
+    return string_schemas;
+}
+
+objectSchemaIssues(schemas: any) {
+    var object_schemas: {[index: string]:any} = {};
+    object_schemas['status'] = true;
+    object_schemas.locations = [];
+    for (let schema in schemas) {
+        let schematype = schemas[schema]['type'];
+        if (schematype === 'object') {
+            if (schemas[schema]['properties'] === undefined || schemas[schema]['additionalProperties'] !== false) {
+                object_schemas.locations.push(schema);
+                if (object_schemas['status']) {
+                    object_schemas['status'] = false;
+                }
+            }
+        }
+    }
+    return object_schemas;
+}
+
 findSchemasOfType(type: string, props: any, collection: any) {
     //For finding schemas within schemas
     for (let schema in props) {
