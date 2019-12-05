@@ -300,7 +300,7 @@ stringSchemaIssues(schemas: any) {
 objectSchemaIssues(schemas: any) {
     //Checks schemas type 'object'
     //Checks if schemas have properties defined and additional properties blocked
-
+    //Problems with empty schemas!
     var object_schemas: {[index: string]:any} = {};
     object_schemas['status'] = true;
     object_schemas.locations = [];
