@@ -298,6 +298,9 @@ stringSchemaIssues(schemas: any) {
 }
 
 objectSchemaIssues(schemas: any) {
+    //Checks schemas type 'object'
+    //Checks if schemas have properties defined and additional properties blocked
+
     var object_schemas: {[index: string]:any} = {};
     object_schemas['status'] = true;
     object_schemas.locations = [];
@@ -310,14 +313,45 @@ objectSchemaIssues(schemas: any) {
                     object_schemas['status'] = false;
                 }
             }
+            else {
+                let typestatus = this.checkValueTypes(schemas[schema]['properties']);
+                if (!typestatus) {
+                    object_schemas.locations.push(schema);
+                    if (object_schemas['status']) {
+                        object_schemas['status'] = false;
+                    }
+                }
+            }
         }
     }
     return object_schemas;
 }
 
+checkValueTypes(props: any): boolean{
+    let typestatus = true;
+    for (let schema in props) {
+        if (props[schema] === null) {
+            continue;
+        }
+        if (props[schema]['type'] === 'object' && typestatus) {
+            if (props[schema]['properties'] !== undefined) {
+                typestatus = this.checkValueTypes(props[schema]['properties']);
+            }
+        }
+        else if (props[schema]['type'] === undefined && typestatus){
+            typestatus = false;
+        }
+    }
+    return typestatus;
+}
+
+
 findSchemasOfType(type: string, props: any, collection: any) {
     //For finding schemas within schemas
     for (let schema in props) {
+        if (props[schema] === null) {
+            continue;
+        }
         let schematype = props[schema]['type'];
         if (schematype === 'object') {
             if (props[schema]['properties'] !== undefined) {
