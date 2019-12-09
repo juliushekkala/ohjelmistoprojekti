@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 const winston = require('winston');
 
 //defining outChannel for the module
@@ -9,21 +10,28 @@ const outChannel = vscode.window.createOutputChannel('openAPI yaml tester');
 let totalTests = 0;
 let securityTests = 0;
 
-//set the file params
-//let logFileDir = loggingFolder;
-let logFileDir = "C:/out";
-let logFileName = "winston.txt";
-let debugLogFileName = "debug.txt";
 
-export function logFolder(loggingFolder: string | import("path").ParsedPath) {
-    logFileDir = String(loggingFolder);
+//from https://stackoverflow.com/a/42637468 
+//Get the path of the currently open file
+let currentlyOpenFile = "hello.txt";
+
+if (typeof vscode.window.activeTextEditor !== 'undefined') {
+    currentlyOpenFile = vscode.window.activeTextEditor.document.fileName;	 
 }
 
-//https://stackoverflow.com/questions/55583723/creating-a-log-file-for-a-vscode-extension
+//takes the directory of the open file
+//for example c:\Users\Käyttäjä\Documents\GitHub\petstore.yaml
+//makes logFileDir to c:\Users\Käyttäjä\Documents\GitHub\petstore-log\
+let logFileDir = path.dirname(currentlyOpenFile) + path.sep + 
+    (path.basename(currentlyOpenFile, path.extname(currentlyOpenFile))) + 
+    "-log";
+let logFileName = "APItest.log";
 
-//const logger: winston.Logger = winston.createLogger({
+//https://stackoverflow.com/questions/55583723/creating-a-log-file-for-a-vscode-extension
+//creates logger (logger.info)
+//stamps rows when logging
 const logger = winston.createLogger({
-    level: 'debug',
+    level: 'info',
     format: winston.format.combine(
         winston.format.simple(),
         winston.format.timestamp({
@@ -36,24 +44,19 @@ const logger = winston.createLogger({
             level: 'info',
             dirname: logFileDir,
             filename: logFileName
-        }),
-        new winston.transports.File({
-            level: 'debug',
-            dirname: logFileDir,
-            filename: debugLogFileName
         })
     ]
 });
     
-
+export function logFile() {
+    outChannel.appendLine("Log saved to:");
+    outChannel.appendLine(logFileDir + path.sep + logFileName);
+}
 
 
 export function reset() {
     totalTests = 0;
     securityTests = 0;
-    //just some testing to be deleted later
-    logger.info("whatever");
-    outChannel.appendLine("LogPath: " + logFileDir + logFileName);
     }
 
 //sets up output window for all other modules, clears it and shows it automatically
@@ -92,9 +95,11 @@ export function yaml(path: string) {
     if (path.endsWith("yaml")) {
         vscode.window.showInformationMessage(path);
         outChannel.appendLine('File is yaml, OK!');
+        logger.info('File is yaml, OK!');
     }
     else {
        outChannel.appendLine('File is not yaml, cannot test this!');
+       logger.info('File is not yaml, cannot test this!');
     }
 }
 
@@ -150,8 +155,11 @@ export function security(servers_here: { [index: string]: any; }) {
     
         //Print the current test number and the "key"
         outChannel.appendLine("Test " + securityTests + ": " + key);
+        logger.info("Test " + securityTests + ": " + key);
+
         //print the starting line
         outChannel.appendLine(testing);
+        logger.info(testing);
     
         //printing the results only if the status bit of that value is false == error
         if (value["status"] === false){
@@ -163,15 +171,18 @@ export function security(servers_here: { [index: string]: any; }) {
             //but for other errors, print the flaw and the cause
                 if (value[flaw] === false) {
                     outChannel.appendLine(flaw + cause);
+                    logger.info(flaw + cause);
                 }
             }
             //Print the possible exploit for these flaws
             outChannel.appendLine(exploit);
+            logger.info(exploit);
         }   
 
         //Otherwise, if no errors found, just print that the test was successful
         else {
             outChannel.appendLine(nice);
+            logger.info(nice);
         }
     
         //The current test portion has now finished, starting new test (back to the start of the for-loop)
@@ -179,6 +190,8 @@ export function security(servers_here: { [index: string]: any; }) {
 
     //Security testing ended, give total results, this total needs to be used again in next modules
     outChannel.appendLine("Tested " + securityTests + " test modules in this function");
+    logger.info("Tested " + securityTests + " test modules in this function");
     totalTests =+ securityTests;
     outChannel.appendLine("Tested " + totalTests + " in all test modules");
+    logger.info("Tested " + totalTests + " in all test modules");
 }

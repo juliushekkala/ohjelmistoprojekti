@@ -1,7 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import * as path from 'path';
 import * as readapi from "./readapi";
 import * as messages from "./messages";
 import * as datavalid from "./datavalid";
@@ -34,30 +33,20 @@ export function activate(context: vscode.ExtensionContext) {
 		messages.time('Starting tests at: ');
 
 		//var currentlyOpenFile = "hello.txt";
-		var currentlyOpenFile = "";
-		var currentlyOpenFolder = "";
-		var currentlyOpenExt = "";
-		var loggingFolder;
+		let currentlyOpenFile = "hello.txt";
 
 		//from https://stackoverflow.com/a/42637468 
 		//Get the path of the currently open file
 		if (typeof vscode.window.activeTextEditor !== 'undefined') {
-			currentlyOpenFile = vscode.window.activeTextEditor.document.fileName;
-			//added path (and imported path) to parse the folder easily
-			currentlyOpenFolder = path.dirname(currentlyOpenFile);
-			currentlyOpenExt = path.extname(currentlyOpenFile);
-			loggingFolder = path.parse(currentlyOpenFolder);
-			//give loggingfolder to messages.
-			messages.logFolder(loggingFolder);
+			currentlyOpenFile = vscode.window.activeTextEditor.document.fileName;	
 		}
-
-		
-		
 
 		//Print file name
 		messages.file(currentlyOpenFile);
+
 		//Print folder
-		messages.file(""+loggingFolder);
+		//moved path-finding to messages
+		//messages.file(""+loggingFolder);
 	
 		//Check that file to be tested is yaml 
 		messages.yaml(currentlyOpenFile);
@@ -88,6 +77,9 @@ export function activate(context: vscode.ExtensionContext) {
 		messages.time('Tests ended at: ');
 		//reset counters for tests run
 		messages.reset();
+
+		//tell the log-file location
+		messages.logFile();
 	}
 	); context.subscriptions.push(disposable);}
 
