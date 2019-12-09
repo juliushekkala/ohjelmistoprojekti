@@ -40,7 +40,11 @@
 		"vscode-test": "^1.2.0"
 	},
 	"dependencies": {
+<<<<<<< HEAD
 		"valid-url": "^1.0.9",
 		"winston": "^3.2.1"
+=======
+		"valid-url": "^1.0.9"
+>>>>>>> 107c4cf0a08194c5c4bec2cb21902d622c099770
 	}
 }

@@ -74,6 +74,10 @@ export function activate(context: vscode.ExtensionContext) {
 		let Apicheck = new readapi.Apicheck(ymlfile);
 		var servers_here = Apicheck.checkSecurity();
 		messages.security(servers_here);
+<<<<<<< HEAD
+=======
+		
+>>>>>>> 107c4cf0a08194c5c4bec2cb21902d622c099770
 
 		//Run the tests from datavalid
 		let Datavalid = new datavalid.Datavalidationcheck(ymlfile);
@@ -83,6 +87,10 @@ export function activate(context: vscode.ExtensionContext) {
 		//or maybe everything can be put into same function...
 		messages.security(validations);
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 107c4cf0a08194c5c4bec2cb21902d622c099770
 		//Finally, print the ending time
 		messages.time('Tests ended at: ');
 		//reset counters for tests run
