@@ -98,6 +98,22 @@ checkSchemas() {
     if (!schema_check['empty_schemas']['status']) {
         schema_check['status'] = false;
     }
+    schema_check['array_schemas'] = this.arraySchemaIssues(schemas);
+    if (!schema_check['array_schemas']['status']) {
+        schema_check['status'] = false;
+    }
+    schema_check['numeric_schemas'] = this.numericSchemaIssues(schemas);
+    if (!schema_check['numeric_schemas']['status']) {
+        schema_check['status'] = false;
+    }
+    schema_check['string_schemas'] = this.stringSchemaIssues(schemas);
+    if (!schema_check['string_schemas']['status']) {
+        schema_check['status'] = false;
+    }
+    schema_check['object_schemas'] = this.objectSchemaIssues(schemas);
+    if (!schema_check['object_schemas']['status']) {
+        schema_check['status'] = false;
+    }
     return schema_check;
 }
 
@@ -114,6 +130,239 @@ emptySchemas(schemas: any) {
         }
     }
     return empty_schemas;
+}
+
+arraySchemaIssues(schemas: any) {
+    //Checks schemas with type: 'array'
+    //Checks if schemas have maxItems and types of items defined
+    //Failure in this test can expose the server to attacks where unexpected data or large quantities of data is sent
+    var array_schemas: {[index: string]:any} = {};
+    array_schemas['status'] = true;
+    array_schemas.locations = [];
+    for (let schema in schemas) {
+        let schematype = schemas[schema]['type'];
+        if (schematype === 'object') {
+            if (schemas[schema]['properties'] !== undefined) {
+                let typeschemas: {[index: string]:any} = {};
+                let statbool = true; //Schemas should be added to array_schemas only once
+                this.findSchemasOfType('array', schemas[schema]['properties'], typeschemas);
+                for (let typeschema in typeschemas) {
+                    if (typeschemas[typeschema]['maxItems'] === undefined) {
+                        if (statbool) {
+                            array_schemas.locations.push(schema);
+                            if (array_schemas['status']) {
+                                array_schemas['status'] = false;
+                            }
+                        }
+                        statbool = false;
+                    }
+                    else if (schemas[schema]['items']['type'] === undefined && schemas[schema]['items']['$ref'] === undefined) {
+                        if (statbool) {
+                            array_schemas.locations.push(schema);
+                            if (array_schemas['status']) {
+                                array_schemas['status'] = false;
+                            }
+                        }
+                        statbool = false;
+                    }
+                }
+            }
+        }
+        else if (schematype === 'array') {
+            if (schemas[schema]['maxItems'] === undefined) {
+                array_schemas.locations.push(schema);
+                if (array_schemas['status']) {
+                    array_schemas['status'] = false;
+                }
+            }
+            else if (schemas[schema]['items']['type'] === undefined && schemas[schema]['items']['$ref'] === undefined) {
+                array_schemas.locations.push(schema);
+                if (array_schemas['status']) {
+                    array_schemas['status'] = false;
+                }
+            }
+        }
+    }
+    return array_schemas;
+}
+
+numericSchemaIssues(schemas: any) {
+    //Checks schemas with types 'integer' and 'number'
+    //Checks if schemas have proper formats, (int64, int32 or float, double)
+    //Unspecified format can lead to unexpected errors when unexpected inputs are used
+    var numeric_schemas: {[index: string]:any} = {};
+    numeric_schemas['status'] = true;
+    numeric_schemas.locations = [];
+    for (let schema in schemas) {
+        let schematype = schemas[schema]['type'];
+        if (schematype === 'object') {
+            if (schemas[schema]['properties'] !== undefined) {
+                let typeschemas: {[index: string]:any} = {};
+                let statbool = true; //Schemas should be added to numeric_schemas only once
+                this.findSchemasOfType('integer', schemas[schema]['properties'], typeschemas);
+                this.findSchemasOfType('number', schemas[schema]['properties'], typeschemas);
+                for (let typeschema in typeschemas) {
+                    if (typeschemas[typeschema]['type'] === 'integer') { 
+                        if (typeschemas[typeschema]['format'] !== 'int32' && typeschemas[typeschema]['format'] !== 'int64' && statbool) { //Expected input to cut down possible attack vectors
+                            numeric_schemas.locations.push(schema);
+                            if (numeric_schemas['status']) {
+                                numeric_schemas['status'] = false;
+                            }
+                            statbool = false;
+                        }
+                        else if ((typeschemas[typeschema]['maximum'] === undefined ||  typeschemas[typeschema]['minimum'] === undefined) && statbool) { //Maximum and minimum values to limit attack vectors
+                            numeric_schemas.locations.push(schema);
+                            if (numeric_schemas['status']) {
+                                numeric_schemas['status'] = false;
+                            }
+                            statbool = false;
+                        }
+                    }
+                    if (typeschemas[typeschema]['type'] === 'number') {
+                        if (typeschemas[typeschema]['format'] !== 'float' && typeschemas[typeschema]['format'] !== 'double' && statbool) {
+                            numeric_schemas.locations.push(schema);
+                            if (numeric_schemas['status']) {
+                                numeric_schemas['status'] = false;
+                            }
+                            statbool = false;
+                        }
+                        else if ((typeschemas[typeschema]['maximum'] === undefined ||  typeschemas[typeschema]['minimum'] === undefined) && statbool) { //Maximum and minimum values to limit attack vectors
+                            numeric_schemas.locations.push(schema);
+                            if (numeric_schemas['status']) {
+                                numeric_schemas['status'] = false;
+                            }
+                            statbool = false;
+                        }
+                    }
+                }
+                
+            }
+        }
+        else if (schematype === 'integer') {
+            if (schemas[schema]['format'] !== "int32" && schemas[schema]['format'] !== "int64") {
+                numeric_schemas.locations.push(schema);
+            }
+            else if (schemas[schema]['maximum'] === undefined || schemas[schema]['minimum'] === undefined) { //Maximum and minimum values to limit attack vectors
+                numeric_schemas.locations.push(schema);
+            }
+        }
+        else if (schematype === 'number') {
+            if (schemas[schema]['format'] !== "float" && schemas[schema]['format'] !== "double") {
+                numeric_schemas.locations.push(schema);
+            }
+            else if (schemas[schema]['maximum'] === undefined || schemas[schema]['minimum'] === undefined) { //Maximum and minimum values to limit attack vectors
+                numeric_schemas.locations.push(schema);
+            }
+        }
+    }
+    return numeric_schemas;
+}
+
+stringSchemaIssues(schemas: any) {
+    //Checks schemas with type 'string'
+    //Checks if schemas have maximum string length and string pattern defined
+    //No maximum length can expose the server to overloading attacks. Lack of pattern could allow various attacks, including SQL injections
+    var string_schemas: {[index: string]:any} = {};
+    string_schemas['status'] = true;
+    string_schemas.locations = [];
+    for (let schema in schemas) {
+        let schematype = schemas[schema]['type'];
+        if (schematype === 'object') {
+            if (schemas[schema]['properties'] !== undefined) {
+                let typeschemas: {[index: string]:any} = {};
+                let statbool = true; //Schemas should be added to numeric_schemas only once
+                this.findSchemasOfType('string', schemas[schema]['properties'], typeschemas);
+                for (let typeschema in typeschemas) {
+                    if (typeschemas[typeschema]['maxLength'] === undefined || typeschemas[typeschema]['pattern'] === undefined) {
+                        if (statbool) {
+                            string_schemas.locations.push(schema);
+                            if (string_schemas['status']) {
+                                string_schemas['status'] = false;
+                            }
+                        }
+                        statbool = false;
+                    }
+                }
+            }
+        }
+        else if (schematype === 'string') {
+            if (schemas[schema]['maxLength'] === undefined || schemas[schema]['pattern'] === undefined) {
+                string_schemas.locations.push(schema);
+                if (string_schemas['status']) {
+                    string_schemas['status'] = false;
+                }
+            }
+        }
+    }
+    return string_schemas;
+}
+
+objectSchemaIssues(schemas: any) {
+    //Checks schemas type 'object'
+    //Checks if schemas have properties defined and additional properties blocked
+    //Problems with empty schemas!
+    var object_schemas: {[index: string]:any} = {};
+    object_schemas['status'] = true;
+    object_schemas.locations = [];
+    for (let schema in schemas) {
+        let schematype = schemas[schema]['type'];
+        if (schematype === 'object') {
+            if (schemas[schema]['properties'] === undefined || schemas[schema]['additionalProperties'] !== false) {
+                object_schemas.locations.push(schema);
+                if (object_schemas['status']) {
+                    object_schemas['status'] = false;
+                }
+            }
+            else {
+                let typestatus = this.checkValueTypes(schemas[schema]['properties']);
+                if (!typestatus) {
+                    object_schemas.locations.push(schema);
+                    if (object_schemas['status']) {
+                        object_schemas['status'] = false;
+                    }
+                }
+            }
+        }
+    }
+    return object_schemas;
+}
+
+checkValueTypes(props: any): boolean{
+    let typestatus = true;
+    for (let schema in props) {
+        if (props[schema] === null) {
+            continue;
+        }
+        if (props[schema]['type'] === 'object' && typestatus) {
+            if (props[schema]['properties'] !== undefined) {
+                typestatus = this.checkValueTypes(props[schema]['properties']);
+            }
+        }
+        else if (props[schema]['type'] === undefined && typestatus){
+            typestatus = false;
+        }
+    }
+    return typestatus;
+}
+
+
+findSchemasOfType(type: string, props: any, collection: any) {
+    //For finding schemas within schemas
+    for (let schema in props) {
+        if (props[schema] === null) {
+            continue;
+        }
+        let schematype = props[schema]['type'];
+        if (schematype === 'object') {
+            if (props[schema]['properties'] !== undefined) {
+                this.findSchemasOfType(type, props[schema]['properties'], collection);
+            }
+        }
+        else if (schematype === type) {
+            collection[schema] = props[schema];
+        }
+    }
+    return;
 }
 
 public findTargets(target: string, obj: any, collection: any, location: string) {
@@ -141,6 +390,7 @@ public checkDataValidation() {
     var data_object: {[index: string]:any} = {};
     data_object['param_schemas'] = this.checkParamSchemas();
     data_object['schemas'] = this.checkSchemas();
+    console.log(data_object);
     return data_object;
 }
 }
