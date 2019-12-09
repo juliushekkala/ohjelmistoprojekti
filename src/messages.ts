@@ -10,9 +10,15 @@ let totalTests = 0;
 let securityTests = 0;
 
 //set the file params
-let logFileDir = ".out/";
+//let logFileDir = loggingFolder;
+let logFileDir = "C:/out";
 let logFileName = "winston.txt";
 let debugLogFileName = "debug.txt";
+
+export function logFolder(loggingFolder: string | import("path").ParsedPath) {
+    logFileDir = String(loggingFolder);
+}
+
 //https://stackoverflow.com/questions/55583723/creating-a-log-file-for-a-vscode-extension
 
 //const logger: winston.Logger = winston.createLogger({
@@ -45,7 +51,9 @@ const logger = winston.createLogger({
 export function reset() {
     totalTests = 0;
     securityTests = 0;
+    //just some testing to be deleted later
     logger.info("whatever");
+    outChannel.appendLine("LogPath: " + logFileDir + logFileName);
     }
 
 
@@ -70,14 +78,21 @@ export function time(reason: string) {
 }
 
 //prints file name
-export function file(currentlyOpenTabfilePath: string) {
+export function file(path: string) {
     outChannel.appendLine('Testing file:');
-    outChannel.appendLine(currentlyOpenTabfilePath);
+    outChannel.appendLine(path);
 }
+
+//prints folder
+export function folder(folder: string) {
+    outChannel.appendLine('Testing file:');
+    outChannel.appendLine(folder);
+}
+
 //tells whether the file is yaml or not
-export function yaml(currentlyOpenTabfilePath: string) {
-    if (currentlyOpenTabfilePath.endsWith("yaml")) {
-        vscode.window.showInformationMessage(currentlyOpenTabfilePath);
+export function yaml(path: string) {
+    if (path.endsWith("yaml")) {
+        vscode.window.showInformationMessage(path);
         outChannel.appendLine('File is yaml, OK!');
     }
     else {

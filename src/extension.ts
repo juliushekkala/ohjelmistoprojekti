@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as path from 'path';
 import * as readapi from "./readapi";
 import * as messages from "./messages";
 import * as datavalid from "./datavalid";
@@ -32,23 +33,38 @@ export function activate(context: vscode.ExtensionContext) {
 		//Find current time
 		messages.time('Starting tests at: ');
 
-		//var currentlyOpenTabfilePath = "hello.txt";
-		var currentlyOpenTabfilePath = "";
+		//var currentlyOpenFile = "hello.txt";
+		var currentlyOpenFile = "";
+		var currentlyOpenFolder = "";
+		var currentlyOpenExt = "";
+		var loggingFolder;
+
 		//from https://stackoverflow.com/a/42637468 
 		//Get the path of the currently open file
 		if (typeof vscode.window.activeTextEditor !== 'undefined') {
-			currentlyOpenTabfilePath = vscode.window.activeTextEditor.document.fileName;
+			currentlyOpenFile = vscode.window.activeTextEditor.document.fileName;
+			//added path (and imported path) to parse the folder easily
+			currentlyOpenFolder = path.dirname(currentlyOpenFile);
+			currentlyOpenExt = path.extname(currentlyOpenFile);
+			loggingFolder = path.parse(currentlyOpenFolder);
+			//give loggingfolder to messages.
+			messages.logFolder(loggingFolder);
 		}
 
-		//Print file name
-		messages.file(currentlyOpenTabfilePath);
+		
+		
 
+		//Print file name
+		messages.file(currentlyOpenFile);
+		//Print folder
+		messages.file(""+loggingFolder);
+	
 		//Check that file to be tested is yaml 
-		messages.yaml(currentlyOpenTabfilePath);
+		messages.yaml(currentlyOpenFile);
 
 		//Load the yaml 
 		try {
-			var ymlfile = yaml.safeLoad(fs.readFileSync(currentlyOpenTabfilePath, 'utf8'));
+			var ymlfile = yaml.safeLoad(fs.readFileSync(currentlyOpenFile, 'utf8'));
 		} catch (e) {
 			vscode.window.showInformationMessage("Can't open file");
 		}
