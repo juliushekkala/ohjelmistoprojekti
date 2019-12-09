@@ -300,7 +300,7 @@ stringSchemaIssues(schemas: any) {
 objectSchemaIssues(schemas: any) {
     //Checks schemas type 'object'
     //Checks if schemas have properties defined and additional properties blocked
-    //Problems with empty schemas!
+    //Checks if subschemas have types
     var object_schemas: {[index: string]:any} = {};
     object_schemas['status'] = true;
     object_schemas.locations = [];
@@ -328,9 +328,12 @@ objectSchemaIssues(schemas: any) {
 }
 
 checkValueTypes(props: any): boolean{
+    //Used for checking if subschemas have types
     let typestatus = true;
     for (let schema in props) {
         if (props[schema] === null) {
+            //Subschema is empty, thus is an issue
+            typestatus = false;
             continue;
         }
         if (props[schema]['type'] === 'object' && typestatus) {
