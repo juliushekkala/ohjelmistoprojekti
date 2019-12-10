@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+
 const winston = require('winston');
 
 //defining outChannel for the module
@@ -19,7 +20,7 @@ if (typeof vscode.window.activeTextEditor !== 'undefined') {
     currentlyOpenFile = vscode.window.activeTextEditor.document.fileName;	 
 }
 
-//takes the directory of the open file
+//find the location of the open file and create a folder and logfile there
 //for example c:\Users\Käyttäjä\Documents\GitHub\petstore.yaml
 //makes logFileDir to c:\Users\Käyttäjä\Documents\GitHub\petstore-log\
 let logFileDir = path.dirname(currentlyOpenFile) + path.sep + 
@@ -103,19 +104,20 @@ export function yaml(path: string) {
     }
 }
 
-//prints the results from the readapi tests
+
 export function security(servers_here: { [index: string]: any; }) {
-    //Iterate through the results of the readapi tests (security)
+    //prints the results from the readapi tests
+    //Iterate through the results of the readapi tests (security):
 	for (let key in servers_here) {
         let value = servers_here[key];
         //Increase the number of the test, so the total and current can be printed
         securityTests++;
     
-        //Need to declare the strings to be used first
-        let testing = "";
-        let exploit = "";
-        let cause = "";
-        let nice = "";
+        //declare the strings to be used first
+        let testing;
+        let exploit;
+        let cause;
+        let nice;
     
         //Change the strings according to the test name
         switch (key) {
@@ -135,14 +137,37 @@ export function security(servers_here: { [index: string]: any; }) {
                 cause = " -> this is wrong";
                 nice = "Security schemes seem to be ok";
                 break;
-        
-            //data valid
+
+            //sec_field
             case "sec_field" :				
                 testing = "Checking whether global security field exists and it is not empty:";
                 exploit = "Global security field not defined or is empty";
                 cause = "Undefined or empty";
                 nice = "Global security field exists and is not empty";
+                break;
+
+            //responses
+            case "responses" :				
+                testing = "Checking responses:";
+                exploit = "Scheme exploit possible";
+                cause = " -> this is wrong";
+                nice = "Responses seem to be ok";
+                break;
+        
+            //data valid
+            case "param_schemas" :				
+                testing = "Param_schemas start";
+                exploit = "Param_schemas exploit";
+                cause = "Param_schemas cause";
+                nice = "Param_schemas nice";
                 break;    
+
+            case "schemas" :				
+                testing = "schemas start";
+                exploit = "schemas exploit";
+                cause = "schemas cause";
+                nice = "schemas nice";
+                break;
 
             //unknown test
             default :				
@@ -164,6 +189,8 @@ export function security(servers_here: { [index: string]: any; }) {
         //printing the results only if the status bit of that value is false == error
         if (value["status"] === false){
             for (let flaw in value) {
+                //try to log everything though
+                    logger.info(String(flaw));
             //dont want to print the status row again though, so lets ignore that:
                 if (flaw === "status") {
                 continue;
