@@ -61,17 +61,17 @@ export function activate(context: vscode.ExtensionContext) {
 		//Run the security tests from readapi
 		//Iterate through those results and show them to the user. 
 		let Apicheck = new readapi.Apicheck(ymlfile);
-		var servers_here = Apicheck.checkSecurity();
-		messages.security(servers_here);
+		var apiResults = Apicheck.checkSecurity();
+		messages.tests(apiResults);
 		
 
 		//Run the tests from datavalid
 		let Datavalid = new datavalid.Datavalidationcheck(ymlfile);
-		var validations = Datavalid.checkDataValidation();
+		var dataResults = Datavalid.checkDataValidation();
 		//Iterate through the results and show them to the user. 
 		//security is not the correct one here, but for testing its close enough
 		//or maybe everything can be put into same function...
-		messages.security(validations);
+		messages.tests(dataResults);
 
 		//Finally, print the ending time
 		messages.time('Tests ended at: ');

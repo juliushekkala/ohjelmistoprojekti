@@ -93,7 +93,7 @@ export function folder(folder: string) {
 
 //tells whether the file is yaml or not
 export function yaml(path: string) {
-    if (path.endsWith("yaml")) {
+    if ((path.endsWith("yaml")) || (path.endsWith("yml"))) {
         vscode.window.showInformationMessage(path);
         outChannel.appendLine('File is yaml, OK!');
         logger.info('File is yaml, OK!');
@@ -105,11 +105,47 @@ export function yaml(path: string) {
 }
 
 
-export function security(servers_here: { [index: string]: any; }) {
-    //prints the results from the readapi tests
+//trying to find an efficient way to iterate through object tree
+//https://stackoverflow.com/questions/2549320/looping-through-an-object-tree-recursively
+function parseObjectProperties (obj: { [x: string]: any; hasOwnProperty?: any; }, parse: { (logThis: any): void; (arg0: any): void; }) {
+    for (var k in obj) {
+        if (typeof obj[k] === 'object' && obj[k] !== null) {
+        parseObjectProperties(obj[k], parse);
+        } else if (obj.hasOwnProperty(k)) {
+        parse(obj[k]);
+        }
+    }
+}
+
+
+export function tests(results: {[index: string]:any}) {
+    //prints the results from the tests
     //Iterate through the results of the readapi tests (security):
-	for (let key in servers_here) {
-        let value = servers_here[key];
+
+    //try to open the dictionary (object Object)
+    //Object.entries(results).forEach(([test, thing]) => logger.info(test, thing));
+   
+   /* not working approach
+    let merged = [].concat.apply([], results);
+    logger.info(merged);
+    */
+
+	for (let key in results) {
+        let value = results[key];      
+        
+        //we need to go deeper into the matrix
+        /*
+        for (let sub of results[key]) {
+            logger.info(sub);
+            for (let subsub of results[key][sub]) {
+                logger.info(subsub);
+                for (let subsubsub of results[key][sub][subsub]){
+                    logger.info(subsubsub);
+                }
+            }
+        }
+        */
+
         //Increase the number of the test, so the total and current can be printed
         securityTests++;
     
@@ -125,16 +161,16 @@ export function security(servers_here: { [index: string]: any; }) {
             //addr_list
             case "addr_list" :
                 testing = "Checking if there are http-addresses instead of https:";
-                exploit = "By not having a https server the api is vulnerable for wifi attacks";
+                exploit = "When using http the traffic can be listened in wifi";
                 cause = " -> is not https!";
-                nice = "Urls seem to be ok, thats good!";
+                nice = "Urls seem to be https, thats good!";
                 break;
             
             //sec_schemes
             case "sec_schemes" :				
-                testing = "Checking sec schemes:";
-                exploit = "Scheme exploit possible";
-                cause = " -> this is wrong";
+                testing = "Checking securitySchemes:";
+                exploit = "Without default-settings, its easy to forget security definitions";
+                cause = "-> missing definitions";
                 nice = "Security schemes seem to be ok";
                 break;
 
@@ -142,39 +178,39 @@ export function security(servers_here: { [index: string]: any; }) {
             case "sec_field" :				
                 testing = "Checking whether global security field exists and it is not empty:";
                 exploit = "Global security field not defined or is empty";
-                cause = "Undefined or empty";
+                cause = "-> undefined or empty definitions";
                 nice = "Global security field exists and is not empty";
                 break;
 
             //responses
             case "responses" :				
                 testing = "Checking responses:";
-                exploit = "Scheme exploit possible";
-                cause = " -> this is wrong";
+                exploit = "Having undefined responses risks leaking data to attacker";
+                cause = " -> missing response";
                 nice = "Responses seem to be ok";
                 break;
         
             //data valid
             case "param_schemas" :				
-                testing = "Param_schemas start";
-                exploit = "Param_schemas exploit";
-                cause = "Param_schemas cause";
-                nice = "Param_schemas nice";
+                testing = "Checking parameter schema definitions:";
+                exploit = "API doesn't limit inputs, which may enable buffer overflows";
+                cause = " -> missing definitions ";
+                nice = "Type definitions seem to be ok";
                 break;    
 
             case "schemas" :				
-                testing = "schemas start";
-                exploit = "schemas exploit";
-                cause = "schemas cause";
+                testing = "Checking other schema definitions:";
+                exploit = "Unexpected inputs can be sent, which may enable overflows or fails";
+                cause = "-> missing definitions";
                 nice = "schemas nice";
                 break;
 
             //unknown test
             default :				
-                testing = "Starting a test, which I don't yet know";
-                exploit = "Scheme exploit possible, don't know the exploit";
-                cause = " -> this is wrong, don't know what it is";
-                nice = "Test was ok, don't know what was tested";
+                testing = "Starting an unknown test";
+                exploit = "Exploit possible, unknown test";
+                cause = " -> this is wrong, unknown test";
+                nice = "Test was ok, unknown test";
                 break;
         }
     
@@ -188,18 +224,27 @@ export function security(servers_here: { [index: string]: any; }) {
     
         //printing the results only if the status bit of that value is false == error
         if (value["status"] === false){
+
+
+            //using the parsing function to go through the tree and logging rows with errors
+            parseObjectProperties(results, function (logThis: any) {
+                logger.info(logThis);
+               });   
+
+
             for (let flaw in value) {
-                //try to log everything though
-                    logger.info(String(flaw));
+
             //dont want to print the status row again though, so lets ignore that:
                 if (flaw === "status") {
                 continue;
                 }
             //but for other errors, print the flaw and the cause
+            //this works for the https test, but not others
                 if (value[flaw] === false) {
                     outChannel.appendLine(flaw + cause);
                     logger.info(flaw + cause);
                 }
+                
             }
             //Print the possible exploit for these flaws
             outChannel.appendLine(exploit);
