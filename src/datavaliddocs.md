@@ -5,7 +5,7 @@ Each function has own key that has object as value
 status -key has boolean value, false if problems were found
 Also includes the path for (if applicable) the problems, locations -key
 
-Current sample straight from terminal
+Old sample update pls
 { param_schemas:
    { status: false,
      locations: [ 'paths/user/login/get/parameters' ] },
@@ -38,3 +38,9 @@ Checks schemas with types 'integer' and 'number'
 Checks if schemas have appropriate formats and maximum and minimum defined
 Failure in this test can expose the server to attacks with unexpected inputs. This can lead to server crashes.
 key = numeric_schemas
+
+## objectSchemaIssues
+Checks schemas type 'object'
+Checks if schemas have properties defined, additional properties blocked and subschemas have types
+Failures in this test can effectively allow possible attackers to send any data to the server
+key = object_schemas
