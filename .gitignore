@@ -1,4 +1,3 @@
 node_modules/*
 out
-src/test/*
-test/yamls
+src/test/yamls
