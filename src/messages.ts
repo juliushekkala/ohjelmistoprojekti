@@ -108,27 +108,15 @@ export function yaml(path: string) {
 
 //trying to find an efficient way to iterate through object tree
 //https://stackoverflow.com/questions/2549320/looping-through-an-object-tree-recursively
-function parseObjectProperties (obj: { [x: string]: any; hasOwnProperty?: any; }, parse: { (logThis: any): void; (arg0: any): void; }) {
-    for (var k in obj) {
-        if (typeof obj[k] === 'object' && obj[k] !== null) {
-            parseObjectProperties(obj[k], parse);
-        } 
-        else if (obj.hasOwnProperty(k)) {
-        parse(obj[k]);
-        }
-    }
-}
-
-
-function puraPaketti (object: any, pura: any, i: number) {
+function unfoldPackage (object: any, innerfunction: any, i: number) {
     //i should be 0 if its called from outside
     for (let sub in object) {
         let spaces = "[ ]"; //string with spaces for intendation
         if (typeof object[sub] === 'object') {
-            pura(spaces.repeat(i) + sub + ":" );
+            innerfunction(spaces.repeat(i) + sub + ":" );
             //increase intendation with spaces, add :
             i++;
-            puraPaketti(object[sub], pura, i);
+            unfoldPackage(object[sub], innerfunction, i);
             if (i > 0) {
                 i--;
             }
@@ -136,21 +124,21 @@ function puraPaketti (object: any, pura: any, i: number) {
         } 
         else if (typeof object[sub] === 'string') {
             //intedation should be ok now
-            pura(spaces.repeat(i) + sub + ": "+ '"' + object[sub] + '"');
+            innerfunction(spaces.repeat(i) + sub + ": "+ '"' + object[sub] + '"');
         }
         else if (typeof object[sub] === 'boolean') {
-            pura(spaces.repeat(i)+ sub + ": " + object[sub].valueOf());
+            innerfunction(spaces.repeat(i)+ sub + ": " + object[sub].valueOf());
         }
         else {
             //try to find non-fitting
-            pura(spaces.repeat(i) + sub + " this is type " + typeof object[sub]);
+            innerfunction(spaces.repeat(i) + sub + " this is type " + typeof object[sub]);
         }
     }
 }
 
 export function tests(results: any) {
     logger.info("_Start of object tree of test:_");
-    puraPaketti(results, 
+    unfoldPackage(results, 
         function (logThis: any) {logger.info(logThis);},
         0); //set intendation to 0 when first calling
     logger.info("_End of object tree of test_");
@@ -279,13 +267,6 @@ export function tests(results: any) {
     
         //printing the results only if the status bit of that value is false == error
         if (value["status"] === false){
-
-
-            //using the parsing function to go through the tree and logging rows with errors
-            parseObjectProperties(results, function (logThis: any) {
-                logger.info(logThis);
-               });   
-
 
             for (let flaw in value) {
 
