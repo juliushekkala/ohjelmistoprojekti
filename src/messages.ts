@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { type } from 'os';
 
 const winston = require('winston');
 
@@ -110,41 +111,95 @@ export function yaml(path: string) {
 function parseObjectProperties (obj: { [x: string]: any; hasOwnProperty?: any; }, parse: { (logThis: any): void; (arg0: any): void; }) {
     for (var k in obj) {
         if (typeof obj[k] === 'object' && obj[k] !== null) {
-        parseObjectProperties(obj[k], parse);
-        } else if (obj.hasOwnProperty(k)) {
+            parseObjectProperties(obj[k], parse);
+        } 
+        else if (obj.hasOwnProperty(k)) {
         parse(obj[k]);
         }
     }
 }
 
 
-export function tests(results: {[index: string]:any}) {
-    //prints the results from the tests
-    //Iterate through the results of the readapi tests (security):
+function puraPaketti (object: any, pura: any, i: number) {
+    //i should be 0 if its called from outside
+    for (let sub in object) {
+        let spaces = "[ ]"; //string with spaces for intendation
+        if (typeof object[sub] === 'object') {
+            pura(spaces.repeat(i) + sub + ":" );
+            //increase intendation with spaces, add :
+            i++;
+            puraPaketti(object[sub], pura, i);
+            if (i > 0) {
+                i--;
+            }
+            //now the intendation gets smaller again
+        } 
+        else if (typeof object[sub] === 'string') {
+            //intedation should be ok now
+            pura(spaces.repeat(i) + sub + ": "+ '"' + object[sub] + '"');
+        }
+        else if (typeof object[sub] === 'boolean') {
+            pura(spaces.repeat(i)+ sub + ": " + object[sub].valueOf());
+        }
+        else {
+            //try to find non-fitting
+            pura(spaces.repeat(i) + sub + " this is type " + typeof object[sub]);
+        }
+    }
+}
 
-    //try to open the dictionary (object Object)
-    //Object.entries(results).forEach(([test, thing]) => logger.info(test, thing));
-   
-   /* not working approach
-    let merged = [].concat.apply([], results);
-    logger.info(merged);
-    */
+export function tests(results: any) {
+    logger.info("_Start of object tree of test:_");
+    puraPaketti(results, 
+        function (logThis: any) {logger.info(logThis);},
+        0); //set intendation to 0 when first calling
+    logger.info("_End of object tree of test_");
 
-	for (let key in results) {
-        let value = results[key];      
-        
-        //we need to go deeper into the matrix
-        /*
-        for (let sub of results[key]) {
-            logger.info(sub);
-            for (let subsub of results[key][sub]) {
-                logger.info(subsub);
-                for (let subsubsub of results[key][sub][subsub]){
-                    logger.info(subsubsub);
+    //testing doing things manually
+    if (results.addr_list) {
+        logger.info("Address list:");
+        for (let osoite in results.addr_list) {
+            if (osoite !== "status") {
+                logger.info("    " + osoite);
+            }
+        }           
+    }
+    if (results.sec_schemes) {
+        logger.info("Sec_schemes:");
+        let things = results.sec_schemes; //go into subobject
+        for (let key in things) { //petstore_auth:
+            if (typeof things[key] === 'object') {
+                logger.info("       " + key); //its object, so petstore_auth:             
+                for (let subkey in things[key]) {
+                    if (typeof things[key][subkey] === 'object' ) {
+                        logger.info("           " + subkey);
+                        for (let sub2 in things[key][subkey]) {
+                            if (typeof things[key][subkey][sub2] === 'object' ) {
+                                logger.info("               " + sub2);
+                                }
+                            else if (typeof things[key][subkey][sub2] === 'string' ) {
+                                logger.info("               " + sub2);
+                            }    
+                        }
+                    }
+                    else if (typeof things[key][subkey] === 'string') {
+                        logger.info("           " + subkey);
+                    }
                 }
             }
+            else if (typeof things[key] === 'string') {
+                logger.info("       " + key);
+            }
+            else if (typeof things[key] === 'boolean') {
+                logger.info("       " + key);
+            }
         }
-        */
+    }
+
+
+    
+	for (let key in results) {
+        let value = results[key];      
 
         //Increase the number of the test, so the total and current can be printed
         securityTests++;
