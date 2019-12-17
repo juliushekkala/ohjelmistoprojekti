@@ -145,7 +145,7 @@ function findFalses (object: any, innerfunction: any, i: number) {
         if (typeof object[sub] === 'object') {
             //preSubs[i] = (spaces.repeat(i) + sub + ":" );
             //for one row printing use the next row
-            preSubs[i] = (sub + ": " );
+            preSubs[i] = (sub);
             i++;
             findFalses(object[sub], innerfunction, i);
             if (i > 0) {i--;} //just for safety i>0
@@ -157,27 +157,20 @@ function findFalses (object: any, innerfunction: any, i: number) {
         else if (typeof object[sub] === 'boolean') {
             if (object[sub].valueOf() === false) {
                 //print previous folders now
-                /*
-                for (let j=0; j<=i; j++) {
-                    innerfunction(preSubs[j]);
-                }
-                i++;
-                innerfunction(spaces.repeat(i)+ sub + ": " + object[sub].valueOf());
-                if (i > 0) {i--;}
-                */
                //same but on one row plz
                 let rowString = "";
+                let falseArray: any = [];
                 for (let j=0; j<i; j++) {
-                    rowString = rowString.concat(preSubs[j]);
+                    rowString = rowString.concat(preSubs[j] + ": ");
+                    //for parsing with other functions this needs to be formatted otherwise
+                    falseArray.push(preSubs[j]);
                 }
-                innerfunction(rowString.concat(sub + ": " + object[sub].valueOf()));
+                logger.info(rowString.concat(sub + ": " + object[sub].valueOf()));
+                falseArray.push(sub);
+                console.log(falseArray);
+                innerfunction(falseArray);
             }
-            //yay, print if its false
         }
-        //else {
-            //try to find non-fitting types (none at the moment)
-          //  innerfunction(spaces.repeat(i) + sub + " this is type " + typeof object[sub]);
-        //}
     }
 }
 
@@ -195,7 +188,7 @@ export function tests(results: any) {
     //this show every status: false and their upper objects
     logger.info("_Start of finder:_");
     findFalses(results, 
-        function (logThat: any) {logger.info(logThat);},
+        function (parsedStatus: any) {logger.info(parsedStatus);},
         0); //set intendation to 0 when first calling
     logger.info("_End finder_");
 }
