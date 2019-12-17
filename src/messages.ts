@@ -143,7 +143,9 @@ function findFalses (object: any, innerfunction: any, i: number) {
     //let preSubs = [];
     for (let sub in object) {
         if (typeof object[sub] === 'object') {
-            preSubs[i] = (spaces.repeat(i) + sub + ":" );
+            //preSubs[i] = (spaces.repeat(i) + sub + ":" );
+            //for one row printing use the next row
+            preSubs[i] = (sub + ": " );
             i++;
             findFalses(object[sub], innerfunction, i);
             if (i > 0) {i--;} //just for safety i>0
@@ -155,19 +157,27 @@ function findFalses (object: any, innerfunction: any, i: number) {
         else if (typeof object[sub] === 'boolean') {
             if (object[sub].valueOf() === false) {
                 //print previous folders now
+                /*
                 for (let j=0; j<=i; j++) {
                     innerfunction(preSubs[j]);
                 }
                 i++;
                 innerfunction(spaces.repeat(i)+ sub + ": " + object[sub].valueOf());
                 if (i > 0) {i--;}
+                */
+               //same but on one row plz
+                let rowString = "";
+                for (let j=0; j<i; j++) {
+                    rowString = rowString.concat(preSubs[j]);
+                }
+                innerfunction(rowString.concat(sub + ": " + object[sub].valueOf()));
             }
             //yay, print if its false
         }
-        else {
+        //else {
             //try to find non-fitting types (none at the moment)
-            innerfunction(spaces.repeat(i) + sub + " this is type " + typeof object[sub]);
-        }
+          //  innerfunction(spaces.repeat(i) + sub + " this is type " + typeof object[sub]);
+        //}
     }
 }
 
