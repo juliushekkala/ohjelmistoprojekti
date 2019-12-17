@@ -76,7 +76,8 @@ export function activate(context: vscode.ExtensionContext) {
 		//Finally, print the ending time
 		//messages.time('Tests ended at: '); //probably not needed
 		//reset counters for tests run
-		messages.reset();
+		
+		//messages.reset();
 
 		//tell the log-file location
 		messages.logFile();

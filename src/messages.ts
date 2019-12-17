@@ -1,16 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { type } from 'os';
 
 const winston = require('winston');
 
 //defining outChannel for the module
 const outChannel = vscode.window.createOutputChannel('openAPI yaml tester');
-
-//total number of tests, all modules, starts from zero (maybe needs var?)
-//different names for functions, so those can be returned if needed somewhere else
-let totalTests = 0;
-let securityTests = 0;
 
 //variables for ran tests
 let ranTests: any = []; //this is used by all test modules
@@ -26,10 +20,13 @@ let exploit: string;
 let cause: string;
 let nice: string;
 
+//arrays for parsing
+let preSubs :any = [];
+let parsedArray: any = []; //creates an empty array where fault-rows are put
 
 //from https://stackoverflow.com/a/42637468 
 //Get the path of the currently open file
-let currentlyOpenFile = "hello.txt";
+let currentlyOpenFile = "hello.txt"; //in case there is nothing, removes some extra errors maybe
 
 if (typeof vscode.window.activeTextEditor !== 'undefined') {
     currentlyOpenFile = vscode.window.activeTextEditor.document.fileName;	 
@@ -42,12 +39,12 @@ let logFileDir = path.dirname(currentlyOpenFile) + path.sep +
     (path.basename(currentlyOpenFile, path.extname(currentlyOpenFile))) + 
     "-log";
 let logFileName = "APItest.log";
+let debugFileName = "APIdebug.log";
 
 //https://stackoverflow.com/questions/55583723/creating-a-log-file-for-a-vscode-extension
 //creates logger (logger.info)
 //stamps rows when logging
 const logger = winston.createLogger({
-    level: 'info',
     format: winston.format.combine(
         winston.format.simple(),
         winston.format.timestamp({
@@ -57,23 +54,22 @@ const logger = winston.createLogger({
     ),
     transports: [
         new winston.transports.File({
-            level: 'info',
+            level: 'info', //logs info and more severe, use this for all output data + some extras
             dirname: logFileDir,
             filename: logFileName
+        }),
+        new winston.transports.File({
+            level: 'silly', //logs silly and more severe, all info here
+            dirname: logFileDir,
+            filename: debugFileName
         })
     ]
-});
-    
+    });
+
 export function logFile() {
     outChannel.appendLine("Log saved to:");
     outChannel.appendLine(logFileDir + path.sep + logFileName);
 }
-
-
-export function reset() {
-    totalTests = 0;
-    securityTests = 0;
-    }
 
 //sets up output window for all other modules, clears it and shows it automatically
 export function start() {
@@ -105,7 +101,7 @@ export function file(path: string) {
     outChannel.appendLine("Testing file: " + path);
 }
 
-//prints folder
+//prints folder, not used?
 export function folder(folder: string) {
     outChannel.appendLine("Located in folder: " + folder);
 }
@@ -115,14 +111,13 @@ export function yaml(path: string) {
     if ((path.endsWith("yaml")) || (path.endsWith("yml"))) {
         vscode.window.showInformationMessage(path);
         //outChannel.appendLine('File is yaml, OK!'); //maybe this is not relevant
-        logger.info('File is yaml, OK!');
+        logger.silly('File is yaml, OK!');
     }
     else {
        outChannel.appendLine('File is not yaml, cannot test this!');
        logger.info('File is not yaml, cannot test this!');
     }
 }
-
 
 //trying to find an efficient way to iterate through object tree
 //found help from recursive function..
@@ -153,72 +148,67 @@ function unfoldPackage (object: any, innerfunction: any, i: number) {
         }
     }
 }
-//move elsewhere maybe
-let preSubs :any = [];
-let parsedArray: any = []; //creates an empty array where fault-rows are put
 
-function findFalses (object: any, innerfunction: any, i: number) {
+function findFalses (object: any, innerfunction: any, i: number) {  
     //i should be 0 if its called from outside
+    //this function parses the rows with falses into one row, with the upper objects
     for (let sub in object) {
         if (typeof object[sub] === 'object') {
-            //for one row printing use the next row
             preSubs[i] = (sub);
             i++;
             findFalses(object[sub], innerfunction, i);
             if (i > 0) {i--;} //just for safety i>0
         } 
         else if (typeof object[sub] === 'string') {
-            //innerfunction(spaces.repeat(i) + sub + ": "+ '"' + object[sub] + '"');
-            //no need to print strings
+            //no need to print strings?
         }
         else if (typeof object[sub] === 'boolean') {
             //log anyways, to get the numbers...
-           // if (object[sub].valueOf() === false) {
                 let tempArray = [];
                 //print previous folders now
-               //same but on one row plz
                 let rowString = "";
                 for (let j=0; j<i; j++) {
                     rowString = rowString.concat(preSubs[j] + ": ");
-                    //for parsing with other functions this needs to be formatted otherwise
                     tempArray.push(preSubs[j]);
                 }
-                logger.info(rowString.concat(sub + ": " + object[sub].valueOf()));
+                logger.silly(rowString.concat(sub + ": " + object[sub].valueOf()));
                 tempArray.push(sub);
                 tempArray.push(object[sub].valueOf());
                 parsedArray.push(tempArray);
-            //}
         }
     }
 }
 
 export function resetParsedArray() {
-    //done for resetting...
+    //reset the array, had some problems
     parsedArray = [];}
 
 export function buildTrees(results: any) {
-
     //parse object trees into log file
-    logger.info("_Start of object tree of test:_");
+    logger.silly("*************Start of object tree of test:*************");
     unfoldPackage(results, 
-        function (logThis: any) {logger.info(logThis);},
+        function (logThis: any) {logger.silly(logThis);},
         0); //set intendation to 0 when first calling
-    logger.info("_End of object tree of test_");
+    logger.silly("*************End of object tree of test*************");
 }
 
 export function parsed(results: any) {
     //this parses every boolean to their own rows
-    logger.info("_Start of finder:_");
+    logger.silly("*************Start of finder:*************");
     findFalses(results, 
         //function (parsedStatus: any) {textFeedback(parsedStatus);},
         function (parsedStatus: any) {textFeedback(parsedArray);},
         0); //set intendation to 0 when first calling
-    logger.info("_End finder_");
-    console.log(parsedArray);
+    logger.silly("*************End finder*************");
+    //console.log(parsedArray);
+
+    //TODO: locations folders in schemas are not logged or parsed here, so missing from the fails too...
+
     return parsedArray;
 }
 
 function selectTextStrings(moduleName: string) {
+    //select the strings according to the test
     switch (moduleName) {
     
         //addr_list
@@ -295,15 +285,6 @@ export function textFeedback (results: any) {
             //a new test, ran tests should be resetted
             testedHere = 0;
             testedHereFalse = 0;
-            //Print the current test number and the "maincheck"
-            //outChannel.appendLine("Test module: " + securityTests + ": " + maincheck);
-            logger.info("Test module: " + securityTests + ": " + maincheck);
-            //print the starting line
-            //outChannel.appendLine(testing);
-            logger.info(testing);
-            //Print the possible exploit for these flaws
-            //outChannel.appendLine(exploit);
-            logger.info(exploit);
         }
 
         index = ranTests.indexOf(maincheck);
@@ -323,53 +304,45 @@ export function textFeedback (results: any) {
             //looks stupid, but finally works at least somehow
             //log the flaw-object and cause-text
             //outChannel.appendLine(rowWithFlaw + cause);
-            logger.info(rowWithFlaw + cause);
+            logger.info(rowWithFlaw + cause); //maybe this needs to be logged for user
             testedHereFalse++;
             ranTestsFailed[index] = testedHereFalse;
-
         }
     ranTestTimes[index] = testedHere;
     ranTestsFailed[index] = testedHereFalse;
     }
 }
 
-
 export function endStats(){
 
+    //put the arrays to log if needed
+    /*
     console.log(ranTests);
     console.log(ranTestTimes);
     console.log(ranTestsFailed);
+    */
 
     for (let i in ranTests) {
 
         //select the correct output lines
         selectTextStrings(ranTests[i]);
 
-        logger.info(testing); //checked...
+        logger.info("Test " + i + ": "  + testing); //checked...
+        outChannel.appendLine("Test " + i + ": "  + testing); //checked...
+
         logger.info("Tested " + ranTestTimes[i] + " locations with " 
         + ranTestsFailed[i] + " failed tests");
-
-        if (ranTestsFailed[i] === 0) {
-            logger.info(nice); //no errors
-        }
-        else {
-            logger.info(exploit); //possible exploit
-        }
-
-        outChannel.appendLine("Test " + i + ": "  + testing); //checked...
         outChannel.appendLine("Tested " + ranTestTimes[i] + " locations with " 
         + ranTestsFailed[i] + " failed tests");
 
         if (ranTestsFailed[i] === 0) {
+            logger.info(nice); //no errors
             outChannel.appendLine(nice); //no errors
         }
         else {
+            logger.info(exploit); //possible exploit
             outChannel.appendLine(exploit); //possible exploit
         } 
-
-
     }
-
-
 }
 
