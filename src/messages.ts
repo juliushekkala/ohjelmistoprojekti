@@ -107,6 +107,7 @@ export function yaml(path: string) {
 
 
 //trying to find an efficient way to iterate through object tree
+//found help from recursive function..
 //https://stackoverflow.com/questions/2549320/looping-through-an-object-tree-recursively
 function unfoldPackage (object: any, innerfunction: any, i: number) {
     //i should be 0 if its called from outside
@@ -114,35 +115,82 @@ function unfoldPackage (object: any, innerfunction: any, i: number) {
         let spaces = "[ ]"; //string with spaces for intendation
         if (typeof object[sub] === 'object') {
             innerfunction(spaces.repeat(i) + sub + ":" );
-            //increase intendation with spaces, add :
+            //increase intendation with spaces, add i:
             i++;
             unfoldPackage(object[sub], innerfunction, i);
             if (i > 0) {
+                //now the intendation gets smaller again
                 i--;
             }
-            //now the intendation gets smaller again
         } 
         else if (typeof object[sub] === 'string') {
-            //intedation should be ok now
             innerfunction(spaces.repeat(i) + sub + ": "+ '"' + object[sub] + '"');
         }
         else if (typeof object[sub] === 'boolean') {
             innerfunction(spaces.repeat(i)+ sub + ": " + object[sub].valueOf());
         }
         else {
-            //try to find non-fitting
+            //try to find non-fitting types (none at the moment)
+            innerfunction(spaces.repeat(i) + sub + " this is type " + typeof object[sub]);
+        }
+    }
+}
+let preSubs :any = [];
+function findFalses (object: any, innerfunction: any, i: number) {
+    //i should be 0 if its called from outside
+    let spaces = "[ ]"; //string with spaces for intendation
+    //move to outer
+    //let preSubs = [];
+    for (let sub in object) {
+        if (typeof object[sub] === 'object') {
+            preSubs[i] = (spaces.repeat(i) + sub + ":" );
+            i++;
+            findFalses(object[sub], innerfunction, i);
+            if (i > 0) {i--;} //just for safety i>0
+        } 
+        else if (typeof object[sub] === 'string') {
+            //innerfunction(spaces.repeat(i) + sub + ": "+ '"' + object[sub] + '"');
+            //no need to print strings
+        }
+        else if (typeof object[sub] === 'boolean') {
+            if (object[sub].valueOf() === false) {
+                //print previous folders now
+                for (let j=0; j<=i; j++) {
+                    innerfunction(preSubs[j]);
+                }
+                i++;
+                innerfunction(spaces.repeat(i)+ sub + ": " + object[sub].valueOf());
+                if (i > 0) {i--;}
+            }
+            //yay, print if its false
+        }
+        else {
+            //try to find non-fitting types (none at the moment)
             innerfunction(spaces.repeat(i) + sub + " this is type " + typeof object[sub]);
         }
     }
 }
 
+
+
 export function tests(results: any) {
+
+    //parse object trees into log file
     logger.info("_Start of object tree of test:_");
     unfoldPackage(results, 
         function (logThis: any) {logger.info(logThis);},
         0); //set intendation to 0 when first calling
     logger.info("_End of object tree of test_");
 
+    //this show every status: false and their upper objects
+    logger.info("_Start of finder:_");
+    findFalses(results, 
+        function (logThat: any) {logger.info(logThat);},
+        0); //set intendation to 0 when first calling
+    logger.info("_End finder_");
+}
+/*
+    
     //testing doing things manually
     if (results.addr_list) {
         logger.info("Address list:");
@@ -292,7 +340,7 @@ export function tests(results: any) {
             outChannel.appendLine(nice);
             logger.info(nice);
         }
-    
+        
         //The current test portion has now finished, starting new test (back to the start of the for-loop)
     }
 
@@ -303,3 +351,5 @@ export function tests(results: any) {
     outChannel.appendLine("Tested " + totalTests + " in all test modules");
     logger.info("Tested " + totalTests + " in all test modules");
 }
+
+*/
