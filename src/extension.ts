@@ -58,21 +58,41 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage("Can't open file");
 		}
 		
+		/* needs rearranging
 		//Run the security tests from readapi
 		//Iterate through those results and show them to the user. 
 		let Apicheck = new readapi.Apicheck(ymlfile);
 		var apiResults = Apicheck.checkSecurity();
-		messages.tests(apiResults);
+		messages.buildTrees(apiResults); //prints tree
+		messages.textFeedback(messages.parsed(apiResults)); //makes a falseArray, and parses it with textfeedback
 		
 
 		//Run the tests from datavalid
 		let Datavalid = new datavalid.Datavalidationcheck(ymlfile);
 		var dataResults = Datavalid.checkDataValidation();
 		//Iterate through the results and show them to the user. 
-		//security is not the correct one here, but for testing its close enough
-		//or maybe everything can be put into same function...
-		messages.tests(dataResults);
+		messages.buildTrees(dataResults); //prints tree
+		messages.textFeedback(messages.parsed(dataResults)); //makes a falseArray, and parses it with textfeedback
+		*/
 
+		//Run the security tests from readapi
+		//Iterate through those results and show them to the user. 
+		let Apicheck = new readapi.Apicheck(ymlfile);
+		var apiResults = Apicheck.checkSecurity();
+		//Run the tests from datavalid
+		let Datavalid = new datavalid.Datavalidationcheck(ymlfile);
+		var dataResults = Datavalid.checkDataValidation();
+
+		messages.buildTrees(apiResults); //prints tree
+		messages.buildTrees(dataResults); //prints tree
+
+		messages.textFeedback(messages.parsed(apiResults)); //makes a falseArray, and parses it with textfeedback
+		messages.resetFalseArray();
+		messages.textFeedback(messages.parsed(dataResults)); //makes a falseArray, and parses it with textfeedback
+
+
+		//print stats
+		messages.endStats();
 		//Finally, print the ending time
 		messages.time('Tests ended at: ');
 		//reset counters for tests run

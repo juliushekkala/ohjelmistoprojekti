@@ -12,6 +12,14 @@ const outChannel = vscode.window.createOutputChannel('openAPI yaml tester');
 let totalTests = 0;
 let securityTests = 0;
 
+//variables for ran tests
+let ranTests: any = []; //this is used by all test modules
+let ranTestTimes: any = []; //logging of tests ran
+let ranTestsFailed: any = []; //logging of failed tests
+let index: number;
+let testedHere: number;
+let testedHereFalse: number;
+
 
 //from https://stackoverflow.com/a/42637468 
 //Get the path of the currently open file
@@ -135,15 +143,14 @@ function unfoldPackage (object: any, innerfunction: any, i: number) {
         }
     }
 }
+//move elsewhere maybe
 let preSubs :any = [];
+let falseArray: any = []; //creates an empty array where fault-rows are put
+
 function findFalses (object: any, innerfunction: any, i: number) {
     //i should be 0 if its called from outside
-    let spaces = "[ ]"; //string with spaces for intendation
-    //move to outer
-    //let preSubs = [];
     for (let sub in object) {
         if (typeof object[sub] === 'object') {
-            //preSubs[i] = (spaces.repeat(i) + sub + ":" );
             //for one row printing use the next row
             preSubs[i] = (sub);
             i++;
@@ -155,28 +162,31 @@ function findFalses (object: any, innerfunction: any, i: number) {
             //no need to print strings
         }
         else if (typeof object[sub] === 'boolean') {
-            if (object[sub].valueOf() === false) {
+            //log anyways, to get the numbers...
+           // if (object[sub].valueOf() === false) {
+                let tempArray = [];
                 //print previous folders now
                //same but on one row plz
                 let rowString = "";
-                let falseArray: any = [];
                 for (let j=0; j<i; j++) {
                     rowString = rowString.concat(preSubs[j] + ": ");
                     //for parsing with other functions this needs to be formatted otherwise
-                    falseArray.push(preSubs[j]);
+                    tempArray.push(preSubs[j]);
                 }
                 logger.info(rowString.concat(sub + ": " + object[sub].valueOf()));
-                falseArray.push(sub);
-                console.log(falseArray);
-                innerfunction(falseArray);
-            }
+                tempArray.push(sub);
+                tempArray.push(object[sub].valueOf());
+                falseArray.push(tempArray);
+            //}
         }
     }
 }
 
+export function resetFalseArray() {
+    //done for resetting...
+    falseArray = [];}
 
-
-export function tests(results: any) {
+export function buildTrees(results: any) {
 
     //parse object trees into log file
     logger.info("_Start of object tree of test:_");
@@ -184,74 +194,37 @@ export function tests(results: any) {
         function (logThis: any) {logger.info(logThis);},
         0); //set intendation to 0 when first calling
     logger.info("_End of object tree of test_");
+}
 
-    //this show every status: false and their upper objects
+export function parsed(results: any) {
+    //this parses every boolean to their own rows
     logger.info("_Start of finder:_");
     findFalses(results, 
-        function (parsedStatus: any) {logger.info(parsedStatus);},
+        //function (parsedStatus: any) {textFeedback(parsedStatus);},
+        function (parsedStatus: any) {textFeedback(falseArray);},
         0); //set intendation to 0 when first calling
     logger.info("_End finder_");
+    console.log(falseArray);
+    return falseArray;
 }
-/*
-    
-    //testing doing things manually
-    if (results.addr_list) {
-        logger.info("Address list:");
-        for (let osoite in results.addr_list) {
-            if (osoite !== "status") {
-                logger.info("    " + osoite);
-            }
-        }           
-    }
-    if (results.sec_schemes) {
-        logger.info("Sec_schemes:");
-        let things = results.sec_schemes; //go into subobject
-        for (let key in things) { //petstore_auth:
-            if (typeof things[key] === 'object') {
-                logger.info("       " + key); //its object, so petstore_auth:             
-                for (let subkey in things[key]) {
-                    if (typeof things[key][subkey] === 'object' ) {
-                        logger.info("           " + subkey);
-                        for (let sub2 in things[key][subkey]) {
-                            if (typeof things[key][subkey][sub2] === 'object' ) {
-                                logger.info("               " + sub2);
-                                }
-                            else if (typeof things[key][subkey][sub2] === 'string' ) {
-                                logger.info("               " + sub2);
-                            }    
-                        }
-                    }
-                    else if (typeof things[key][subkey] === 'string') {
-                        logger.info("           " + subkey);
-                    }
-                }
-            }
-            else if (typeof things[key] === 'string') {
-                logger.info("       " + key);
-            }
-            else if (typeof things[key] === 'boolean') {
-                logger.info("       " + key);
-            }
-        }
-    }
 
+export function textFeedback (results: any) {
+    //declare the strings to be used first
+    let testing;
+    let exploit;
+    let cause;
+    let nice;
+
+    //if the test is run first time, give info...
+    
 
     
-	for (let key in results) {
-        let value = results[key];      
-
-        //Increase the number of the test, so the total and current can be printed
-        securityTests++;
-    
-        //declare the strings to be used first
-        let testing;
-        let exploit;
-        let cause;
-        let nice;
-    
-        //Change the strings according to the test name
-        switch (key) {
+    for (let testArray in results) {
+        let maincheck = results[testArray][0]; //get main-name of test function 
         
+        //Change the strings according to the test name
+        switch (maincheck) {
+    
             //addr_list
             case "addr_list" :
                 testing = "Checking if there are http-addresses instead of https:";
@@ -307,52 +280,94 @@ export function tests(results: any) {
                 nice = "Test was ok, unknown test";
                 break;
         }
-    
-        //Print the current test number and the "key"
-        outChannel.appendLine("Test " + securityTests + ": " + key);
-        logger.info("Test " + securityTests + ": " + key);
 
-        //print the starting line
-        outChannel.appendLine(testing);
-        logger.info(testing);
-    
-        //printing the results only if the status bit of that value is false == error
-        if (value["status"] === false){
+        //check if the test with same name has been already ran before
+        if (ranTests.includes(maincheck)) {
+        //do nothing
+            //index = ranTests.indexOf(maincheck);
+           //testedHereFalse = ranTestsFailed[index];
+            //testedHere = ranTests[index];
+            //ranTestsFailed[index] = testedHereFalse; //wasnt updating without faults
+            //ranTestTimes[index] = testedHere;
+        }
+        else {ranTests.push(maincheck);
+            //also number of tests ran should be logged
+            //index = ranTests.indexOf(maincheck);
 
-            for (let flaw in value) {
+            //a new test, ran tests should be resetted
+            testedHere = 0;
+            testedHereFalse = 0;
 
-            //dont want to print the status row again though, so lets ignore that:
-                if (flaw === "status") {
-                continue;
-                }
-            //but for other errors, print the flaw and the cause
-            //this works for the https test, but not others
-                if (value[flaw] === false) {
-                    outChannel.appendLine(flaw + cause);
-                    logger.info(flaw + cause);
-                }
-                
-            }
-            //Print the possible exploit for these flaws
+            //ranTestsFailed[index] = testedHereFalse; //wasnt updating without faults
+            //ranTestTimes[index] = testedHere;
+
+            //Increase the number of the test, so the total and current can be printed;
+            //securityTests++;
+            //totalTests =+ securityTests;
+            //Print the current test number and the "maincheck"
+            outChannel.appendLine("Test module: " + securityTests + ": " + maincheck);
+            logger.info("Test module: " + securityTests + ": " + maincheck);
+            //logger.info(ranTests);
+                //print the starting line
+            outChannel.appendLine(testing);
+            logger.info(testing);
+
+                //Print the possible exploit for these flaws
             outChannel.appendLine(exploit);
             logger.info(exploit);
-        }   
-
-        //Otherwise, if no errors found, just print that the test was successful
-        else {
-            outChannel.appendLine(nice);
-            logger.info(nice);
         }
-        
-        //The current test portion has now finished, starting new test (back to the start of the for-loop)
-    }
+        index = ranTests.indexOf(maincheck);
 
-    //Security testing ended, give total results, this total needs to be used again in next modules
-    outChannel.appendLine("Tested " + securityTests + " test modules in this function");
-    logger.info("Tested " + securityTests + " test modules in this function");
-    totalTests =+ securityTests;
-    outChannel.appendLine("Tested " + totalTests + " in all test modules");
-    logger.info("Tested " + totalTests + " in all test modules");
+        let rowWithFlaw = results[testArray].slice(1, -1).join(": "); //make the row readable
+        let value =  (results[testArray].slice(-1)); //take the last value (status)
+
+        //logger.info("mc " + maincheck +  " fl " + rowWithFlaw +" v " + value);
+        
+        //increase number of tests ran (last)
+        testedHere++;
+        ranTestTimes[index] = testedHere;
+        
+        logger.info("TESTTIMES" + ranTestTimes[index]); //works???
+        
+        //logger.info(index); //seems to give the correct index
+        //ranTestTimes[index] = testedHere;
+        
+
+        //logger.info(typeof(value)); //type is object?!?
+        //looks stupid, but works
+        if (value.toString() === "false" ) {
+            //looks stupid, but finally works at least somehow
+            //log the flaw-object and cause-text
+            outChannel.appendLine(rowWithFlaw + cause);
+            logger.info(rowWithFlaw + cause);
+            testedHereFalse++;
+            ranTestsFailed[index] = testedHereFalse;
+            logger.info("TESTTIMESFAILED" + ranTestsFailed[index]);
+            //add number to tested in this
+        }
+    
+    }
 }
 
-*/
+
+export function endStats(){
+    console.log(ranTests);
+    console.log(ranTestTimes);
+    console.log(ranTestsFailed);
+
+    //Security testing ended, give total results, this total needs to be used again in next modules
+    //outChannel.appendLine("Tested " + securityTests + " test modules in this function");
+    //logger.info("Tested " + securityTests + " test modules in this function");
+    
+    //outChannel.appendLine("Tested " + totalTests + " in all test modules");
+    //logger.info("Tested " + totalTests + " in all test modules");
+
+    for (let i in ranTests) {
+        logger.info("In module: " + ranTests[i] + 
+        " tested " + ranTestTimes[i] + " tests with " 
+        + ranTestsFailed[i] + " failed tests");
+    }
+
+
+}
+
