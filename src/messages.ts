@@ -20,6 +20,12 @@ let index: number;
 let testedHere: number;
 let testedHereFalse: number;
 
+//declare the strings to be used first
+let testing: string;
+let exploit: string;
+let cause: string;
+let nice: string;
+
 
 //from https://stackoverflow.com/a/42637468 
 //Get the path of the currently open file
@@ -72,17 +78,23 @@ export function reset() {
 //sets up output window for all other modules, clears it and shows it automatically
 export function start() {
     outChannel.clear();
-    outChannel.appendLine('This is the output window for the extension');
-	outChannel.show(true);
+    //outChannel.appendLine('This is the output window for the extension');
+    outChannel.show(true);
+    
+    //reset stuff just in case..
+    ranTests= []; //this is used by all test modules
+    ranTestTimes = []; //logging of tests ran
+    ranTestsFailed = []; 
+    index = 0;
+    testedHere = 0;
+    testedHereFalse = 0;
 }
 
 //prints time and the reason text
 export function time(reason: string) {
-    let currentTime = new Date();
-    outChannel.appendLine(reason);
-    
+    let currentTime = new Date();  
     //adding leading zero and slicing to get 2 last digits from all...
-    outChannel.appendLine(
+    outChannel.appendLine(reason + " " +
         ("0" + currentTime.getHours()).slice(-2) + ":" +
         ("0" + currentTime.getMinutes()).slice(-2) + ":" + 
         ("0" + currentTime.getSeconds()).slice(-2));
@@ -90,21 +102,19 @@ export function time(reason: string) {
 
 //prints file name
 export function file(path: string) {
-    outChannel.appendLine('Testing file:');
-    outChannel.appendLine(path);
+    outChannel.appendLine("Testing file: " + path);
 }
 
 //prints folder
 export function folder(folder: string) {
-    outChannel.appendLine('Testing file:');
-    outChannel.appendLine(folder);
+    outChannel.appendLine("Located in folder: " + folder);
 }
 
 //tells whether the file is yaml or not
 export function yaml(path: string) {
     if ((path.endsWith("yaml")) || (path.endsWith("yml"))) {
         vscode.window.showInformationMessage(path);
-        outChannel.appendLine('File is yaml, OK!');
+        //outChannel.appendLine('File is yaml, OK!'); //maybe this is not relevant
         logger.info('File is yaml, OK!');
     }
     else {
@@ -145,7 +155,7 @@ function unfoldPackage (object: any, innerfunction: any, i: number) {
 }
 //move elsewhere maybe
 let preSubs :any = [];
-let falseArray: any = []; //creates an empty array where fault-rows are put
+let parsedArray: any = []; //creates an empty array where fault-rows are put
 
 function findFalses (object: any, innerfunction: any, i: number) {
     //i should be 0 if its called from outside
@@ -176,15 +186,15 @@ function findFalses (object: any, innerfunction: any, i: number) {
                 logger.info(rowString.concat(sub + ": " + object[sub].valueOf()));
                 tempArray.push(sub);
                 tempArray.push(object[sub].valueOf());
-                falseArray.push(tempArray);
+                parsedArray.push(tempArray);
             //}
         }
     }
 }
 
-export function resetFalseArray() {
+export function resetParsedArray() {
     //done for resetting...
-    falseArray = [];}
+    parsedArray = [];}
 
 export function buildTrees(results: any) {
 
@@ -201,171 +211,163 @@ export function parsed(results: any) {
     logger.info("_Start of finder:_");
     findFalses(results, 
         //function (parsedStatus: any) {textFeedback(parsedStatus);},
-        function (parsedStatus: any) {textFeedback(falseArray);},
+        function (parsedStatus: any) {textFeedback(parsedArray);},
         0); //set intendation to 0 when first calling
     logger.info("_End finder_");
-    console.log(falseArray);
-    return falseArray;
+    console.log(parsedArray);
+    return parsedArray;
+}
+
+function selectTextStrings(moduleName: string) {
+    switch (moduleName) {
+    
+        //addr_list
+        case "addr_list" :
+            testing = "Checking if there are http-addresses instead of https:";
+            exploit = "-> When using http the traffic can be listened in wifi";
+            cause = " -> is not https!";
+            nice = "-> Urls seem to be https, thats good!";
+            break;
+
+        //sec_schemes   
+        case "sec_schemes" :				
+            testing = "-> Checking securitySchemes:";
+            exploit = "-> Without default-settings, its easy to forget security definitions";
+            cause = "-> missing definitions";
+            nice = "-> Security schemes seem to be ok";
+            break;
+
+        //sec_field
+        case "sec_field" :				
+            testing = "Checking whether global security field exists and it is not empty:";
+            exploit = "-> Without default-settings, its easy to forget security definitions";
+            cause = "-> undefined or empty definitions";
+            nice = "-> Global security field exists and is not empty";
+            break;
+
+        //responses
+        case "responses" :				
+            testing = "Checking responses:";
+            exploit = "-> Having undefined responses risks leaking data to attacker";
+            cause = " -> missing response";
+            nice = "-> Responses seem to be ok";
+            break;
+    
+        //data valid
+        case "param_schemas" :				
+            testing = "Checking parameter schema definitions:";
+            exploit = "-> API doesn't limit inputs, which may enable buffer overflows";
+            cause = " -> missing definitions ";
+            nice = "-> Type definitions seem to be ok";
+            break;    
+
+        case "schemas" :				
+            testing = "Checking other schema definitions:";
+            exploit = "-> Unexpected inputs can be sent, which may enable overflows or fails";
+            cause = "-> missing definitions";
+            nice = "-> Schemas seem to be ok";
+            break;
+
+        //unknown test
+        default :				
+            testing = "Starting an unknown test";
+            exploit = "Exploit possible, unknown test";
+            cause = " -> this is wrong, unknown test";
+            nice = "Test was ok, unknown test";
+            break;
+    }
 }
 
 export function textFeedback (results: any) {
-    //declare the strings to be used first
-    let testing;
-    let exploit;
-    let cause;
-    let nice;
-
-    //if the test is run first time, give info...
-    
-
     
     for (let testArray in results) {
         let maincheck = results[testArray][0]; //get main-name of test function 
         
         //Change the strings according to the test name
-        switch (maincheck) {
-    
-            //addr_list
-            case "addr_list" :
-                testing = "Checking if there are http-addresses instead of https:";
-                exploit = "When using http the traffic can be listened in wifi";
-                cause = " -> is not https!";
-                nice = "Urls seem to be https, thats good!";
-                break;
-            
-            //sec_schemes
-            case "sec_schemes" :				
-                testing = "Checking securitySchemes:";
-                exploit = "Without default-settings, its easy to forget security definitions";
-                cause = "-> missing definitions";
-                nice = "Security schemes seem to be ok";
-                break;
-
-            //sec_field
-            case "sec_field" :				
-                testing = "Checking whether global security field exists and it is not empty:";
-                exploit = "Global security field not defined or is empty";
-                cause = "-> undefined or empty definitions";
-                nice = "Global security field exists and is not empty";
-                break;
-
-            //responses
-            case "responses" :				
-                testing = "Checking responses:";
-                exploit = "Having undefined responses risks leaking data to attacker";
-                cause = " -> missing response";
-                nice = "Responses seem to be ok";
-                break;
-        
-            //data valid
-            case "param_schemas" :				
-                testing = "Checking parameter schema definitions:";
-                exploit = "API doesn't limit inputs, which may enable buffer overflows";
-                cause = " -> missing definitions ";
-                nice = "Type definitions seem to be ok";
-                break;    
-
-            case "schemas" :				
-                testing = "Checking other schema definitions:";
-                exploit = "Unexpected inputs can be sent, which may enable overflows or fails";
-                cause = "-> missing definitions";
-                nice = "schemas nice";
-                break;
-
-            //unknown test
-            default :				
-                testing = "Starting an unknown test";
-                exploit = "Exploit possible, unknown test";
-                cause = " -> this is wrong, unknown test";
-                nice = "Test was ok, unknown test";
-                break;
-        }
+        selectTextStrings(maincheck);
 
         //check if the test with same name has been already ran before
         if (ranTests.includes(maincheck)) {
         //do nothing
-            //index = ranTests.indexOf(maincheck);
-           //testedHereFalse = ranTestsFailed[index];
-            //testedHere = ranTests[index];
-            //ranTestsFailed[index] = testedHereFalse; //wasnt updating without faults
-            //ranTestTimes[index] = testedHere;
         }
         else {ranTests.push(maincheck);
             //also number of tests ran should be logged
-            //index = ranTests.indexOf(maincheck);
-
             //a new test, ran tests should be resetted
             testedHere = 0;
             testedHereFalse = 0;
-
-            //ranTestsFailed[index] = testedHereFalse; //wasnt updating without faults
-            //ranTestTimes[index] = testedHere;
-
-            //Increase the number of the test, so the total and current can be printed;
-            //securityTests++;
-            //totalTests =+ securityTests;
             //Print the current test number and the "maincheck"
-            outChannel.appendLine("Test module: " + securityTests + ": " + maincheck);
+            //outChannel.appendLine("Test module: " + securityTests + ": " + maincheck);
             logger.info("Test module: " + securityTests + ": " + maincheck);
-            //logger.info(ranTests);
-                //print the starting line
-            outChannel.appendLine(testing);
+            //print the starting line
+            //outChannel.appendLine(testing);
             logger.info(testing);
-
-                //Print the possible exploit for these flaws
-            outChannel.appendLine(exploit);
+            //Print the possible exploit for these flaws
+            //outChannel.appendLine(exploit);
             logger.info(exploit);
         }
+
         index = ranTests.indexOf(maincheck);
+        if (ranTestsFailed[index] !== null) {
+            ranTestsFailed[index] = 0;
+        } //without faults this caused problems otherwise
 
         let rowWithFlaw = results[testArray].slice(1, -1).join(": "); //make the row readable
         let value =  (results[testArray].slice(-1)); //take the last value (status)
-
-        //logger.info("mc " + maincheck +  " fl " + rowWithFlaw +" v " + value);
-        
+      
         //increase number of tests ran (last)
         testedHere++;
         ranTestTimes[index] = testedHere;
-        
-        logger.info("TESTTIMES" + ranTestTimes[index]); //works???
-        
-        //logger.info(index); //seems to give the correct index
-        //ranTestTimes[index] = testedHere;
-        
-
-        //logger.info(typeof(value)); //type is object?!?
-        //looks stupid, but works
+                
+        //logger.info(typeof(value)); //type is object...
         if (value.toString() === "false" ) {
             //looks stupid, but finally works at least somehow
             //log the flaw-object and cause-text
-            outChannel.appendLine(rowWithFlaw + cause);
+            //outChannel.appendLine(rowWithFlaw + cause);
             logger.info(rowWithFlaw + cause);
             testedHereFalse++;
             ranTestsFailed[index] = testedHereFalse;
-            logger.info("TESTTIMESFAILED" + ranTestsFailed[index]);
-            //add number to tested in this
+
         }
-    
+    ranTestTimes[index] = testedHere;
+    ranTestsFailed[index] = testedHereFalse;
     }
 }
 
 
 export function endStats(){
+
     console.log(ranTests);
     console.log(ranTestTimes);
     console.log(ranTestsFailed);
 
-    //Security testing ended, give total results, this total needs to be used again in next modules
-    //outChannel.appendLine("Tested " + securityTests + " test modules in this function");
-    //logger.info("Tested " + securityTests + " test modules in this function");
-    
-    //outChannel.appendLine("Tested " + totalTests + " in all test modules");
-    //logger.info("Tested " + totalTests + " in all test modules");
-
     for (let i in ranTests) {
-        logger.info("In module: " + ranTests[i] + 
-        " tested " + ranTestTimes[i] + " tests with " 
+
+        //select the correct output lines
+        selectTextStrings(ranTests[i]);
+
+        logger.info(testing); //checked...
+        logger.info("Tested " + ranTestTimes[i] + " locations with " 
         + ranTestsFailed[i] + " failed tests");
+
+        if (ranTestsFailed[i] === 0) {
+            logger.info(nice); //no errors
+        }
+        else {
+            logger.info(exploit); //possible exploit
+        }
+
+        outChannel.appendLine("Test " + i + ": "  + testing); //checked...
+        outChannel.appendLine("Tested " + ranTestTimes[i] + " locations with " 
+        + ranTestsFailed[i] + " failed tests");
+
+        if (ranTestsFailed[i] === 0) {
+            outChannel.appendLine(nice); //no errors
+        }
+        else {
+            outChannel.appendLine(exploit); //possible exploit
+        } 
+
+
     }
 
 

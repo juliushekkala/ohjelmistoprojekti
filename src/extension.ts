@@ -44,10 +44,6 @@ export function activate(context: vscode.ExtensionContext) {
 		//Print file name
 		messages.file(currentlyOpenFile);
 
-		//Print folder
-		//moved path-finding to messages
-		//messages.file(""+loggingFolder);
-	
 		//Check that file to be tested is yaml 
 		messages.yaml(currentlyOpenFile);
 
@@ -58,23 +54,6 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage("Can't open file");
 		}
 		
-		/* needs rearranging
-		//Run the security tests from readapi
-		//Iterate through those results and show them to the user. 
-		let Apicheck = new readapi.Apicheck(ymlfile);
-		var apiResults = Apicheck.checkSecurity();
-		messages.buildTrees(apiResults); //prints tree
-		messages.textFeedback(messages.parsed(apiResults)); //makes a falseArray, and parses it with textfeedback
-		
-
-		//Run the tests from datavalid
-		let Datavalid = new datavalid.Datavalidationcheck(ymlfile);
-		var dataResults = Datavalid.checkDataValidation();
-		//Iterate through the results and show them to the user. 
-		messages.buildTrees(dataResults); //prints tree
-		messages.textFeedback(messages.parsed(dataResults)); //makes a falseArray, and parses it with textfeedback
-		*/
-
 		//Run the security tests from readapi
 		//Iterate through those results and show them to the user. 
 		let Apicheck = new readapi.Apicheck(ymlfile);
@@ -86,15 +65,16 @@ export function activate(context: vscode.ExtensionContext) {
 		messages.buildTrees(apiResults); //prints tree
 		messages.buildTrees(dataResults); //prints tree
 
-		messages.textFeedback(messages.parsed(apiResults)); //makes a falseArray, and parses it with textfeedback
-		messages.resetFalseArray();
-		messages.textFeedback(messages.parsed(dataResults)); //makes a falseArray, and parses it with textfeedback
+		messages.resetParsedArray();
+		messages.textFeedback(messages.parsed(apiResults)); //makes a parsedArray, and parses it with textfeedback
+		messages.resetParsedArray();
+		messages.textFeedback(messages.parsed(dataResults)); //makes a parsedArray, and parses it with textfeedback
 
 
 		//print stats
 		messages.endStats();
 		//Finally, print the ending time
-		messages.time('Tests ended at: ');
+		//messages.time('Tests ended at: '); //probably not needed
 		//reset counters for tests run
 		messages.reset();
 
