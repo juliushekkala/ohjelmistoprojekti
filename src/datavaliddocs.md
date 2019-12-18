@@ -22,8 +22,19 @@ key = param_schemas
 ## checkSchemas
 First finds all schemas in API, then checks for vulnerabilities for each schema
 key = schemas
-<<<<<<< HEAD
 Includes many subobject for different tests, each have their own status
-=======
-Includes many subobject for different tests, each have their own status
->>>>>>> a16e918f2ed1945c67b33df1f0a878276c9be6a7
+
+## emptySchemas
+Looks for empty schemas in the API, key = empty_schemas
+
+## arraySchemaIssues
+Checks schemas with type: 'array'
+Checks if schemas have maxItems and types of items defined
+Failure in this test can expose the server to attacks where unexpected data or large quantities of data is sent.
+key = array_schemas
+
+## numericSchemaIssues
+Checks schemas with types 'integer' and 'number'
+Checks if schemas have appropriate formats and maximum and minimum defined
+Failure in this test can expose the server to attacks with unexpected inputs. This can lead to server crashes.
+key = numeric_schemas

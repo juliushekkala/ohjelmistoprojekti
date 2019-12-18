@@ -20,6 +20,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('extension.helloWorld', () => {
+		
 		// The code you place here will be executed every time your command is executed
 
 		// Display a message box to the user (in the lower right corner)
@@ -31,52 +32,56 @@ export function activate(context: vscode.ExtensionContext) {
 		//Find current time
 		messages.time('Starting tests at: ');
 
-		var currentlyOpenTabfilePath = "hello.txt";
+		//var currentlyOpenFile = "hello.txt";
+		let currentlyOpenFile = "hello.txt";
+
 		//from https://stackoverflow.com/a/42637468 
 		//Get the path of the currently open file
 		if (typeof vscode.window.activeTextEditor !== 'undefined') {
-			currentlyOpenTabfilePath = vscode.window.activeTextEditor.document.fileName;
+			currentlyOpenFile = vscode.window.activeTextEditor.document.fileName;	
 		}
 
 		//Print file name
-		messages.file(currentlyOpenTabfilePath);
+		messages.file(currentlyOpenFile);
 
 		//Check that file to be tested is yaml 
-		messages.yaml(currentlyOpenTabfilePath);
+		messages.yaml(currentlyOpenFile);
 
 		//Load the yaml 
 		try {
-			var ymlfile = yaml.safeLoad(fs.readFileSync(currentlyOpenTabfilePath, 'utf8'));
+			var ymlfile = yaml.safeLoad(fs.readFileSync(currentlyOpenFile, 'utf8'));
 		} catch (e) {
-			vscode.window.showInformationMessage("failure :D");
+			vscode.window.showInformationMessage("Can't open file");
 		}
 		
 		//Run the security tests from readapi
+		//Iterate through those results and show them to the user. 
 		let Apicheck = new readapi.Apicheck(ymlfile);
-		var servers_here = Apicheck.checkSecurity();
-		//Iterate through the results and show them to the user. 
-		messages.security(servers_here);
-		
-
+		var apiResults = Apicheck.checkSecurity();
 		//Run the tests from datavalid
 		let Datavalid = new datavalid.Datavalidationcheck(ymlfile);
-		var validations = Datavalid.checkDataValidation();
-		//Iterate through the results and show them to the user. 
-		//security is not the correct one here, but for testing its close enough
-		//or maybe everything can be put into same function...
-		messages.security(validations);
+		var dataResults = Datavalid.checkDataValidation();
+
+		messages.buildTrees(apiResults); //prints tree
+		messages.buildTrees(dataResults); //prints tree
+
+		messages.resetParsedArray();
+		messages.generateArrays(messages.parsed(apiResults)); //makes a parsedArray, and parses it
+		messages.resetParsedArray();
+		messages.generateArrays(messages.parsed(dataResults)); //makes a parsedArray, and parses it
 
 
+		//print stats
+		messages.endStats();
 		//Finally, print the ending time
-		messages.time('Tests ended at: ');
+		//messages.time('Tests ended at: '); //probably not needed
 		//reset counters for tests run
-		messages.reset();
+		
+		//messages.reset();
+
+		//tell the log-file location
+		messages.logFile();
 	}
-
-	
-
-	
-
 	); context.subscriptions.push(disposable);}
 
 // this method is called when your extension is deactivated

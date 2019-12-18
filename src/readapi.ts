@@ -1,3 +1,5 @@
+import * as datavalid from "./datavalid";
+
 const yaml = require('js-yaml');
 const fs   = require('fs');
 const validUrl = require('valid-url');
@@ -17,17 +19,20 @@ checkHTTP() {
     var addr_list: {[index: string]:any} = {};
 
     //Go through servers, check if their urls start with https and update object accordingly
-    for (var server of servers) {
-        var address = server['url'];
-        //console.log(address);
-        if (address.startsWith("https")){
-            addr_list[address] = true;
-        }
-        else {
-            addr_list[address] = false;
-            addr_list['status'] = false;
+    if (typeof servers !== "undefined") {
+        for (var server of servers) {
+            var address = server['url'];
+            //console.log(address);
+            if (address.startsWith("https")){
+                addr_list[address] = true;
+            }
+            else {
+                addr_list[address] = false;
+                addr_list['status'] = false;
+            }
         }
     }
+   
     //console.log(addrlist);
     return addr_list;
 }
@@ -132,11 +137,146 @@ checkSecurityField() {
     return sec_field;
 }
 
+//Checks the correctness of different response definitions. 
+responseCheck() {
+    //Use the Json object parser found in datavalid.ts
+    let targetFinder = new datavalid.Datavalidationcheck(this.yaml);
+    var responses: {[index: string]:any} = {};
+    let field = this.yaml.paths; 
+    if (typeof field === 'object') {
+        //Find all response definitions in the yaml
+        targetFinder.findTargets('responses', field, responses, 'paths');
+    }
+    
+    //Go through the different responses
+    for (var response in responses) {
+        //Split the location string    
+        var resp = response.split("/");
+        //Get the operation that the response codes refer to 
+        var operation = resp[resp.length - 2];
+        //For each response code
+        for (var responseCode in responses[response]) {
+            
+            if (operation !== "head") {
+                //Check if 400 response code is defined
+                if (responses[response]['400status'] !== true) {
+                    if (responseCode === '400') {
+                        responses[response]['400status'] = true;
+                        
+                    } else {
+                        responses[response]['400status'] = false;
+                    }
+                }
+                //Check if 429 response code is defined 
+                if (responses[response]['429status'] !== true) {
+                    if (responseCode === '429') {
+                        responses[response]['429status'] = true;
+                        
+                    } else {
+                        responses[response]['429status'] = false;
+                    }
+                }
+                //Check if 500 response code is defined
+                if (responses[response]['500status'] !== true) {
+                    if (responseCode === '500') {
+                        responses[response]['500status'] = true;
+                        
+                    } else {
+                        responses[response]['500status'] = false;
+                    }
+                }
+            }
+            
+            //Check if GET, PUT, HEAD and DELETE operations have their 404 response defined
+            if ((operation === "get" || operation === "put" || operation === "head" || operation === "delete") && responses[response]['404status'] !== true) {
+                if (responseCode === '404') {
+                    responses[response]['404status'] = true;
+                    
+                } else {
+                    responses[response]['404status'] = false;
+                }
+            }
+            
+            //GET operations: Is a 200 or 202 response defined
+            if (operation === "get" && responses[response]['getStatus'] !== true) {
+                if (responseCode === '200' || responseCode === '202') {
+                    responses[response]['getStatus'] = true;
+                } else {
+                    responses[response]['getStatus'] = false;
+                }
+            }
+
+            //OPTIONS operations should have 200 response code defined
+            if (operation === "options" && responses[response]['oper200status'] !== true) {
+               if (responseCode === '200') {
+                   responses[response]['oper200status'] = true;
+               } else {
+                   responses[response]['oper200status'] = false;
+               }
+            }
+
+            //HEAD operations: Is a 200 or 202 response defined
+            if (operation === "head" && responses[response]['headStatus'] !== true) {
+                if (responseCode === '200' || responseCode === '202') {
+                    responses[response]['headStatus'] = true;
+                } else {
+                    responses[response]['headStatus'] = false;
+                }
+            }
+
+            //DELETE operations: Is a 200, 201, 202 or 204 response defined
+            if (operation === "delete" && responses[response]['deleteStatus'] !== true) {
+                if (responseCode === '200' || responseCode === '201' || responseCode === '202' || responseCode === '204') {
+                    responses[response]['deleteStatus'] = true;
+                } else {
+                    responses[response]['deleteStatus'] = false;
+                }
+            }
+
+            //PATCH operations: Is a 200, 201, 202 or 204 response defined
+            if (operation === "patch" && responses[response]['patchStatus'] !== true) {
+                if (responseCode === '200' || responseCode === '201' || responseCode === '202' || responseCode === '204') {
+                    responses[response]['patchStatus'] = true;
+                } else {
+                    responses[response]['patchStatus'] = false;
+                }
+            }
+
+            //POST operations: Is a 200, 201, 202 or 204 response defined
+            if (operation === "post" && responses[response]['postStatus'] !== true) {
+                if (responseCode === '200' || responseCode === '201' || responseCode === '202' || responseCode === '204') {
+                    responses[response]['postStatus'] = true;
+                } else {
+                    responses[response]['postStatus'] = false;
+                }
+            }
+
+            //PUT operations: Is a 200, 201, 202 or 204 response defined
+            if (operation === "put" && responses[response]['putStatus'] !== true) {
+                if (responseCode === '200' || responseCode === '201' || responseCode === '202' || responseCode === '204') {
+                    responses[response]['putStatus'] = true;
+                } else {
+                    responses[response]['putStatus'] = false;
+                }
+            }
+            
+
+
+           
+
+        }
+    }
+    return responses;
+
+}
+
 public checkSecurity() {
     var api_object: {[index: string]:any} = {};
     api_object['addr_list'] = this.checkHTTP();
     api_object['sec_schemes'] = this.checkSecurityScheme();
     api_object['sec_field'] = this.checkSecurityField();
+    api_object['responses'] = this.responseCheck();
+    console.log(api_object);
     return api_object;
 }
 }
