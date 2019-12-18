@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { stat } from 'fs';
 
 const winston = require('winston');
 
@@ -13,6 +14,7 @@ let ranTestsFailed: any = []; //logging of failed tests
 let index: number;
 let testedHere: number;
 let testedHereFalse: number;
+let statusRows: any = []; //somewhere to input the statuses of the functions
 
 //declare the strings to be used first
 let testing: string;
@@ -159,10 +161,10 @@ function findFalses (object: any, innerfunction: any, i: number) {
             findFalses(object[sub], innerfunction, i);
             if (i > 0) {i--;} //just for safety i>0
         } 
-        else if (typeof object[sub] === 'string') {
-            //no need to print strings?
-        }
-        else if (typeof object[sub] === 'boolean') {
+        //else if (typeof object[sub] === 'boolean') {
+        //get the strings here too
+        else if (typeof object[sub] === 'boolean' || 'string') {
+
             //log anyways, to get the numbers...
                 let tempArray = [];
                 //print previous folders now
@@ -176,6 +178,8 @@ function findFalses (object: any, innerfunction: any, i: number) {
                 tempArray.push(object[sub].valueOf());
                 parsedArray.push(tempArray);
         }
+        else {logger.info(object[sub] + "ERROR: NO TYPE MATCHES");}
+
     }
 }
 
@@ -220,7 +224,7 @@ function selectTextStrings(moduleName: string) {
 
         //sec_schemes   
         case "sec_schemes" :				
-            testing = "-> Checking securitySchemes:";
+            testing = "Checking securitySchemes:";
             exploit = "-> Without default-settings, its easy to forget security definitions";
             cause = "-> missing definitions";
             nice = "-> Security schemes seem to be ok";
@@ -296,17 +300,42 @@ export function generateArrays (results: any) {
       
         //increase number of tests ran (last)
         testedHere++;
-        ranTestTimes[index] = testedHere;
                 
         //logger.info(typeof(value)); //type is object...
-        if (value.toString() === "false" ) {
+
+        //first find the "status" rows, which are made by modules, false== there is faults
+        //if (rowWithFlaw.endsWith('status'))   { //takes everything ending with status, but there is response codes...
+        if ((rowWithFlaw.endsWith(' status')) || //so that its not a response code
+        (rowWithFlaw.endsWith('status', 6)))  {//then its only the status text, without whitespace
+          //then it is just a global status...
+            logger.silly(rowWithFlaw + ": " + value + " IM JUST STATUS, dont count me in"); //to silly
+            testedHere--; //dont add the tested number 
+            //use this as a key?
+            statusRows.push(maincheck + ": " + rowWithFlaw + ": " + value);
+        }
+        else if (value.toString() === "false" ) {
             //looks stupid, but finally works at least somehow
             //log the flaw-object and cause-text
             //outChannel.appendLine(rowWithFlaw + cause);
-            logger.info(rowWithFlaw + cause); //maybe this needs to be logged for user
+            logger.info(rowWithFlaw +": "+ value + cause); //maybe this needs to be logged for user
             testedHereFalse++;
-            ranTestsFailed[index] = testedHereFalse;
         }
+        //for rows that are not false?
+        else if (value.toString() === "true" ) {
+            //do nothing?
+            //at least log to silly
+            logger.silly(rowWithFlaw +": "+ value + cause);
+        }
+        else if (rowWithFlaw.includes('location')) { //then it is a location of faulty conf
+            logger.info(rowWithFlaw +": "+ value + cause); //maybe this needs to be logged for user
+            testedHereFalse++;
+        }
+        //and if it is conffed correctly or something else
+        else {
+            logger.silly(rowWithFlaw +": "+ value + cause); //log to silly
+        }
+
+
     ranTestTimes[index] = testedHere;
     ranTestsFailed[index] = testedHereFalse;
     }
@@ -315,33 +344,138 @@ export function generateArrays (results: any) {
 export function endStats(){
 
     //put the arrays to log if needed
-    /*
     console.log(ranTests);
     console.log(ranTestTimes);
     console.log(ranTestsFailed);
-    */
+    console.log(statusRows);
+
+    //lets just manually find the correct statuses
+    statusRows.forEach((element: string) => {
+        if (element.startsWith("addr_list: status:")) {
+            //take status
+            selectTextStrings("addr_list");
+            outChannel.appendLine(testing);
+            logger.info(testing);
+            if (element.endsWith("false")) {
+                outChannel.appendLine(exploit);
+                logger.info(exploit);
+            }
+            else {
+                outChannel.appendLine(nice);}
+                logger.info(nice);
+        }
+        else if (element.startsWith("sec_schemes: status:")) {
+            //take status
+            selectTextStrings("sec_schemes");
+            outChannel.appendLine(testing);
+            logger.info(testing);
+            if (element.endsWith("false")) {
+                outChannel.appendLine(exploit);
+                logger.info(exploit);
+            }
+            else {
+                outChannel.appendLine(nice);}
+                logger.info(nice);
+        }
+        else if (element.startsWith("sec_field: status:")) {
+            //take status
+            selectTextStrings("sec_field");
+            outChannel.appendLine(testing);
+            logger.info(testing);
+            if (element.endsWith("false")) {
+                outChannel.appendLine(exploit);
+                logger.info(exploit);
+            }
+            else {
+                outChannel.appendLine(nice);}
+                logger.info(nice);        }
+        else if (element.startsWith("param_schemas: status:")) {
+            //take status
+            selectTextStrings("param_schemas");
+            outChannel.appendLine(testing);
+            logger.info(testing);
+            if (element.endsWith("false")) {
+                outChannel.appendLine(exploit);
+                logger.info(exploit);
+            }
+            else {
+                outChannel.appendLine(nice);}
+                logger.info(nice);
+            }
+        else if (element.startsWith("schemas: status:")) {
+            //take status
+            selectTextStrings("schemas");
+            outChannel.appendLine(testing);
+            logger.info(testing);
+            if (element.endsWith("false")) {
+                outChannel.appendLine(exploit);
+                logger.info(exploit);
+            }
+            else {
+                outChannel.appendLine(nice);}
+                logger.info(nice);
+            }
+        else if (element.startsWith("schemas: empty_schemas: status:")) {
+            if (element.endsWith("false")) {
+                outChannel.appendLine("-> There are empty schemas");
+                logger.info("-> There are empty schemas");
+            }
+        }
+        else if (element.startsWith("schemas: array_schemas: status:")) {
+            if (element.endsWith("false")) {
+                outChannel.appendLine("-> There are wrongly configured array schemas");
+                logger.info("-> There are wrongly configured array schemas");
+            }
+        }
+        else if (element.startsWith("schemas: numeric_schemas: status:")) {
+            if (element.endsWith("false")) {
+                outChannel.appendLine("-> There are wrongly configured numeric schemas");
+                logger.info("-> There are wrongly configured numeric schemas");
+            }
+        }
+        else if (element.startsWith("schemas: string_schemas: status:")) {
+            if (element.endsWith("false")) {
+                outChannel.appendLine("-> There are wrongly configured string schemas");
+                logger.info("-> There are wrongly configured string schemas");
+            }
+        }
+        else if (element.startsWith("schemas: object_schemas: status:")) {
+            if (element.endsWith("false")) {
+                outChannel.appendLine("-> There are wrongly configured object schemas");
+                logger.info("-> There are wrongly configured object schemas");
+            }
+        }
+    });
+    
+
+
 
     for (let i in ranTests) {
 
         //select the correct output lines
         selectTextStrings(ranTests[i]);
 
-        logger.info("Test " + i + ": "  + testing); //checked...
-        outChannel.appendLine("Test " + i + ": "  + testing); //checked...
+        logger.info("Test " + i + ": "  + testing); //checking ...
+        //outChannel.appendLine("Test " + i + ": "  + testing);
 
-        logger.info("Tested " + ranTestTimes[i] + " locations with " 
-        + ranTestsFailed[i] + " failed tests");
-        outChannel.appendLine("Tested " + ranTestTimes[i] + " locations with " 
-        + ranTestsFailed[i] + " failed tests");
 
+        //different functions run test differently so this is maybe not a good output
+        
+        logger.silly("Tested " + ranTestTimes[i] + " locations with " 
+        + ranTestsFailed[i] + " failed tests");
+        //outChannel.appendLine("Tested " + ranTestTimes[i] + " locations with " 
+        //+ ranTestsFailed[i] + " failed tests");
+        
+        
         if (ranTestsFailed[i] === 0) {
-            logger.info(nice); //no errors
-            outChannel.appendLine(nice); //no errors
+            logger.silly(nice); //no errors, good job
+            //outChannel.appendLine(nice); 
         }
         else {
-            logger.info(exploit); //possible exploit
-            outChannel.appendLine(exploit); //possible exploit
+            logger.silly(exploit); //possible exploit is...
+            //outChannel.appendLine(exploit); 
         } 
+        
     }
 }
 
