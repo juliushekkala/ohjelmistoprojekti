@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { stat } from 'fs';
 
 const winston = require('winston');
 
@@ -214,34 +213,6 @@ function selectTextStrings(moduleName: string) {
     //select the strings according to the test
     switch (moduleName) {
     
-<<<<<<< HEAD
-        //Change the strings according to the test name
-        switch (key) {
-        
-            //addr_list
-            case "addr_list" :
-                teststart = "Checking if there are http-addresses instead of https:";
-                exploit = "By not having a https server the api is vulnerable for wifi attacks";
-                flawcause = " -> is not https!";
-                allgood = "Urls seem to be ok, thats good!";
-                break;
-            
-            //sec_schemes
-            case "sec_schemes" :				
-                teststart = "Checking sec schemes:";
-                exploit = "Scheme exploit possible";
-                flawcause = " -> this is wrong";
-                allgood = "Security schemes seem to be ok";
-                break;
-        
-            //data valid
-            case "sec_field" :				
-                teststart = "Checking whether global security field exists and it is not empty:";
-                exploit = "Global security field not defined or is empty";
-                flawcause = "Undefined or empty";
-                allgood = "Global security field exists and is not empty";
-                break;
-=======
         //addr_list
         case "addr_list" :
             testing = "Checking if there are http-addresses instead of https:";
@@ -265,7 +236,6 @@ function selectTextStrings(moduleName: string) {
             cause = "-> undefined or empty definitions";
             nice = "-> Global security field exists and is not empty";
             break;
->>>>>>> e9f0cc261133eb2e1fe19efe1ef9f5951c2f4dce
 
         //responses
         case "responses" :				
@@ -275,11 +245,6 @@ function selectTextStrings(moduleName: string) {
             nice = "-> Responses seem to be ok";
             break;
     
-<<<<<<< HEAD
-        //Print the current test number
-        outChannel.appendLine("Test key: " + key);
-        outChannel.appendLine("Test" + securitytests + ": " + teststart);
-=======
         //data valid
         case "param_schemas" :				
             testing = "Checking parameter schema definitions:";
@@ -306,7 +271,6 @@ function selectTextStrings(moduleName: string) {
 }
 
 export function generateArrays (results: any) {
->>>>>>> e9f0cc261133eb2e1fe19efe1ef9f5951c2f4dce
     
     for (let testArray in results) {
         let maincheck = results[testArray][0]; //get main-name of test function 
