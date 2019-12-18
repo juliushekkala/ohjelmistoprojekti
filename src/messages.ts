@@ -196,8 +196,7 @@ export function parsed(results: any) {
     //this parses every boolean to their own rows
     logger.silly("*************Start of finder:*************");
     findFalses(results, 
-        //function (parsedStatus: any) {textFeedback(parsedStatus);},
-        function (parsedStatus: any) {textFeedback(parsedArray);},
+        function (parsedStatus: any) {generateArrays(parsedArray);},
         0); //set intendation to 0 when first calling
     logger.silly("*************End finder*************");
     //console.log(parsedArray);
@@ -268,7 +267,7 @@ function selectTextStrings(moduleName: string) {
     }
 }
 
-export function textFeedback (results: any) {
+export function generateArrays (results: any) {
     
     for (let testArray in results) {
         let maincheck = results[testArray][0]; //get main-name of test function 

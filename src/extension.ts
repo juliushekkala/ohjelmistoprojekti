@@ -66,9 +66,9 @@ export function activate(context: vscode.ExtensionContext) {
 		messages.buildTrees(dataResults); //prints tree
 
 		messages.resetParsedArray();
-		messages.textFeedback(messages.parsed(apiResults)); //makes a parsedArray, and parses it with textfeedback
+		messages.generateArrays(messages.parsed(apiResults)); //makes a parsedArray, and parses it
 		messages.resetParsedArray();
-		messages.textFeedback(messages.parsed(dataResults)); //makes a parsedArray, and parses it with textfeedback
+		messages.generateArrays(messages.parsed(dataResults)); //makes a parsedArray, and parses it
 
 
 		//print stats
