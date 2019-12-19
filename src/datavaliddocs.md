@@ -5,14 +5,6 @@ Each function has own key that has object as value
 status -key has boolean value, false if problems were found
 Also includes the path for (if applicable) the problems, locations -key
 
-Old sample update pls
-{ param_schemas:
-   { status: false,
-     locations: [ 'paths/user/login/get/parameters' ] },
-  schemas:
-   { status: false,
-     empty_schemas: { status: false, locations: [Array] } } }
-
 ## checkParamSchemas
 Checks if each parameter object has a schema defined
 Schemas limit accepted inputs (SQL injections)

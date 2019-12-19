@@ -23,11 +23,11 @@ checkParamSchemas() {
     for (let path in paths) {
         if (paths[path]['parameters'] !== undefined) {
             for (let i=0; i<paths[path]['parameters'].length; i++) {
-                if (paths[path]['parameters'][i]['$ref'] === undefined) {
+                if (paths[path]['parameters'][i]['$ref'] !== undefined) {
                     continue;
                 }
                 if (paths[path]['parameters'][i]['schema'] === undefined && paths[path]['parameters'][i]['content'] === undefined) {
-                    let location = "paths" + path +  "/" + "parameters";
+                    let location = "paths" + path +  "/" + "parameters" + "/" + i;
                     problemparams.locations.push(location);
                     if (problemparams['status']) {
                         problemparams['status'] = false;
@@ -47,7 +47,7 @@ checkParamSchemas() {
                         continue;
                     }
                     if (paths[path][itemobject]['parameters'][i]['schema'] === undefined && paths[path][itemobject]['parameters'][i]['content'] === undefined) {
-                        let location = "paths" + path + "/" + itemobject + "/" + "parameters";
+                        let location = "paths" + path + "/" + itemobject + "/" + "parameters" + "/" + i;
                         problemparams.locations.push(location);
                         if (problemparams['status']) {
                             problemparams['status'] = false;
@@ -74,7 +74,6 @@ checkParamSchemas() {
         }
     }
     //var testet = paths['/pet']['post']['requestBody']['$ref'];
-    //console.log(testet);
     return problemparams;
 }
 
@@ -105,12 +104,10 @@ checkSchemas() {
                     let updatedloc = schema + '/' + combiner + '/' + sub;
                     schemas[updatedloc] = OfList[sub];
                 }
-                delete schemas[schema];
-
             }
+            delete schemas[schema];
         }
     }
-
     schema_check['empty_schemas'] = this.emptySchemas(schemas);
     if (!schema_check['empty_schemas']['status']) {
         schema_check['status'] = false;
@@ -173,7 +170,7 @@ arraySchemaIssues(schemas: any) {
                         }
                         statbool = false;
                     }
-                    else if (schemas[schema]['items']['type'] === undefined && schemas[schema]['items']['$ref'] === undefined) {
+                    else if (typeschemas[typeschema]['items']['type'] === undefined && typeschemas[typeschema]['items']['$ref'] === undefined) {
                         if (statbool) {
                             array_schemas.locations.push(schema);
                             if (array_schemas['status']) {
@@ -221,7 +218,7 @@ numericSchemaIssues(schemas: any) {
                 this.findSchemasOfType('number', schemas[schema]['properties'], typeschemas);
                 for (let typeschema in typeschemas) {
                     if (typeschemas[typeschema]['type'] === 'integer') { 
-                        if (typeschemas[typeschema]['format'] !== 'int32' && typeschemas[typeschema]['format'] !== 'int64' && statbool) { //Expected input to cut down possible attack vectors
+                        if (typeschemas[typeschema]['format'] !== 'int32' && typeschemas[typeschema]['format'] !== 'int64' && statbool) { //Expected input to cut down possible attack vectors, format: long is currently a vulnerability
                             numeric_schemas.locations.push(schema);
                             if (numeric_schemas['status']) {
                                 numeric_schemas['status'] = false;
