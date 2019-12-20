@@ -27,45 +27,19 @@ let parsedArray: any = []; //creates an empty array where fault-rows are put
 
 //from https://stackoverflow.com/a/42637468 
 //Get the path of the currently open file
-let currentlyOpenFile = "hello.txt"; //in case there is nothing, removes some extra errors maybe
-
-if (typeof vscode.window.activeTextEditor !== 'undefined') {
-    currentlyOpenFile = vscode.window.activeTextEditor.document.fileName;	 
-}
+let currentlyOpenFile: any;
 
 //find the location of the open file and create a folder and logfile there
 //for example c:\Users\Käyttäjä\Documents\GitHub\petstore.yaml
 //makes logFileDir to c:\Users\Käyttäjä\Documents\GitHub\petstore-log\
-let logFileDir = path.dirname(currentlyOpenFile) + path.sep + 
-    (path.basename(currentlyOpenFile, path.extname(currentlyOpenFile))) + 
-    "-log";
+let logFileDir: any;
 let logFileName = "APItest.log";
 let debugFileName = "APIdebug.log";
 
 //https://stackoverflow.com/questions/55583723/creating-a-log-file-for-a-vscode-extension
 //creates logger (logger.info)
 //stamps rows when logging
-const logger = winston.createLogger({
-    format: winston.format.combine(
-        winston.format.simple(),
-        winston.format.timestamp({
-            format: 'YYYY-MM-DD HH:mm:ss'
-        }),
-        winston.format.printf((info: { timestamp: any; level: any; message: any; }) => `${info.timestamp} ${info.level}: ${info.message}`)
-    ),
-    transports: [
-        new winston.transports.File({
-            level: 'info', //logs info and more severe, use this for all output data + some extras
-            dirname: logFileDir,
-            filename: logFileName
-        }),
-        new winston.transports.File({
-            level: 'silly', //logs silly and more severe, all info here
-            dirname: logFileDir,
-            filename: debugFileName
-        })
-    ]
-    });
+let logger: any;
 
 export function logFile() {
     outChannel.appendLine("Log saved to:");
@@ -74,6 +48,42 @@ export function logFile() {
 
 //sets up output window for all other modules, clears it and shows it automatically
 export function start() {
+
+    
+    if (typeof vscode.window.activeTextEditor !== 'undefined') {
+        currentlyOpenFile = vscode.window.activeTextEditor.document.fileName;	 
+    }
+    logFileDir = path.dirname(currentlyOpenFile) + path.sep + 
+    (path.basename(currentlyOpenFile, path.extname(currentlyOpenFile))) + 
+    "-log";
+
+
+    logger = winston.createLogger({
+        format: winston.format.combine(
+            winston.format.simple(),
+            winston.format.timestamp({
+                format: 'YYYY-MM-DD HH:mm:ss'
+            }),
+            winston.format.printf((info: { timestamp: any; level: any; message: any; }) => `${info.timestamp} ${info.level}: ${info.message}`)
+        ),
+        transports: [
+            new winston.transports.File({
+                level: 'info', //logs info and more severe, use this for all output data + some extras
+                dirname: logFileDir,
+                filename: logFileName
+            }),
+            new winston.transports.File({
+                level: 'silly', //logs silly and more severe, all info here
+                dirname: logFileDir,
+                filename: debugFileName
+            })
+        ]
+        });
+    
+
+
+
+
     outChannel.clear();
     //outChannel.appendLine('This is the output window for the extension');
     outChannel.show(true);
