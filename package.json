@@ -1,6 +1,6 @@
 {
-	"name": "helloworld",
-	"displayName": "HelloWorld",
+	"name": "openapispecificationtester",
+	"displayName": "OpenAPI specification tester",
 	"description": "",
 	"version": "0.0.1",
 	"engines": {
@@ -10,14 +10,14 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.helloWorld"
+		"onCommand:extension.openapispecificationtester"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "extension.helloWorld",
-				"title": "testi"
+				"command": "extension.openapispecificationtester",
+				"title": "OpenAPItest"
 			}
 		]
 	},
@@ -27,7 +27,7 @@
 		"watch": "tsc -watch -p ./",
 		"pretest": "npm run compile",
 		"test": "node ./out/test/runTest.js",
-		"unit_test": "mocha -r ts-node/register test/test.ts"
+		"readapi_test": "mocha -r ts-node/register src/test/test.ts"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.2.7",
