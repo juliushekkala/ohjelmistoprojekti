@@ -29,16 +29,10 @@ let parsedArray: any = []; //creates an empty array where fault-rows are put
 //Get the path of the currently open file
 let currentlyOpenFile: any;
 
-//find the location of the open file and create a folder and logfile there
-//for example c:\Users\Käyttäjä\Documents\GitHub\petstore.yaml
-//makes logFileDir to c:\Users\Käyttäjä\Documents\GitHub\petstore-log\
 let logFileDir: any;
 let logFileName = "APItest.log";
 let debugFileName = "APIdebug.log";
 
-//https://stackoverflow.com/questions/55583723/creating-a-log-file-for-a-vscode-extension
-//creates logger (logger.info)
-//stamps rows when logging
 let logger: any;
 
 export function logFile() {
@@ -49,15 +43,20 @@ export function logFile() {
 //sets up output window for all other modules, clears it and shows it automatically
 export function start() {
 
-    
     if (typeof vscode.window.activeTextEditor !== 'undefined') {
         currentlyOpenFile = vscode.window.activeTextEditor.document.fileName;	 
     }
+
+    //find the location of the open file and create a folder and logfile there
+    //for example c:\Users\Käyttäjä\Documents\GitHub\petstore.yaml
+    //makes logFileDir to c:\Users\Käyttäjä\Documents\GitHub\petstore-log\
     logFileDir = path.dirname(currentlyOpenFile) + path.sep + 
     (path.basename(currentlyOpenFile, path.extname(currentlyOpenFile))) + 
     "-log";
 
-
+    //https://stackoverflow.com/questions/55583723/creating-a-log-file-for-a-vscode-extension
+    //creates logger (logger.info)
+    //stamps rows when logging
     logger = winston.createLogger({
         format: winston.format.combine(
             winston.format.simple(),
@@ -72,17 +71,15 @@ export function start() {
                 dirname: logFileDir,
                 filename: logFileName
             }),
-            new winston.transports.File({
-                level: 'silly', //logs silly and more severe, all info here
-                dirname: logFileDir,
-                filename: debugFileName
-            })
+            // uncomment the row under this if you want more info
+
+            //new winston.transports.File({
+            //    level: 'silly', //logs silly and more severe, all info here
+            //    dirname: logFileDir,
+            //    filename: debugFileName
+           // })
         ]
         });
-    
-
-
-
 
     outChannel.clear();
     //outChannel.appendLine('This is the output window for the extension');
@@ -281,6 +278,7 @@ function selectTextStrings(moduleName: string) {
 }
 
 export function generateArrays (results: any) {
+    logger.info("*****FAULTY ROWS*****");
     
     for (let testArray in results) {
         let maincheck = results[testArray][0]; //get main-name of test function 
@@ -348,6 +346,7 @@ export function generateArrays (results: any) {
     ranTestTimes[index] = testedHere;
     ranTestsFailed[index] = testedHereFalse;
     }
+    logger.info("**FAULTY ROWS END**");
 }
 
 export function endStats(){
@@ -464,7 +463,7 @@ export function endStats(){
         //select the correct output lines
         selectTextStrings(ranTests[i]);
 
-        logger.info("Test " + i + ": "  + testing); //checking ...
+        logger.silly("Test " + i + ": "  + testing); //checking ...
         //outChannel.appendLine("Test " + i + ": "  + testing);
 
 
