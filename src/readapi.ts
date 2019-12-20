@@ -96,8 +96,8 @@ checkOAuth2Urls(sec_schemes: any): boolean {
 }
 
 //Check whether global security field is defined && that it is not an empty array
-checkSecurityField() {
-    var sec_field = this.yaml.security;
+checkSecurityField(sec_field: any) {
+    
     //console.log(sec_field);
     //not defined
     if (typeof sec_field === "undefined") {
@@ -138,14 +138,16 @@ checkSecurityField() {
 }
 
 //Checks the correctness of different response definitions. 
-responseCheck() {
+responseCheck(secStatus: boolean) {
     //Use the Json object parser found in datavalid.ts
     let targetFinder = new datavalid.Datavalidationcheck(this.yaml);
     var responses: {[index: string]:any} = {};
+    var responseSec: {[index: string]: any} = {};
     let field = this.yaml.paths; 
     if (typeof field === 'object') {
         //Find all response definitions in the yaml
         targetFinder.findTargets('responses', field, responses, 'paths');
+        targetFinder.findTargets('security', field, responseSec, 'paths');
     }
     
     //Go through the different responses
@@ -154,6 +156,8 @@ responseCheck() {
         var resp = response.split("/");
         //Get the operation that the response codes refer to 
         var operation = resp[resp.length - 2];
+        var oper_long: string = response.substring(0, response.length - 9);
+        var security_check: string = oper_long + "security";
         //For each response code
         for (var responseCode in responses[response]) {
             
@@ -259,7 +263,63 @@ responseCheck() {
                     responses[response]['putStatus'] = false;
                 }
             }
+
+            //Checks if default status is defined. It is optional so not that big of a deal
+            if (responses[response]['defaultstatus'] !== true) {
+                if (responseCode === 'default') {
+                    responses[response]['defaultstatus'] = true;
+                } else {
+                    responses[response]['defaultstatus'] = false;
+                }
+            }
             
+            //If security is defined for the operation, 401 and 403 responses should be defined
+            if (responses[response]['sec401status'] !== true || responses[response]['sec403status'] !== true) {
+                //If global securily defined
+                if (secStatus === true) {
+                    if (responseCode === '401') {
+                        responses[response]['sec401status'] = true;
+                    }
+                    else if (responseCode === '403') {
+                        responses[response]['sec403status'] = true;
+                    } else {
+                        if (typeof responses[response]['sec401status'] === "undefined") {
+                            responses[response]['sec401status'] = false;
+                        }
+                        if (typeof responses[response]['sec403status'] === "undefined") {
+                            responses[response]['sec403status'] = false;
+                        }
+                    }
+                //If operation has specific security defined
+                } else if (typeof responseSec[security_check] !== "undefined") {
+                    //Check the security field
+                    
+                    var sec = this.checkSecurityField(Object.assign({}, responseSec[security_check]));
+                    //console.log(sec);
+                    if (sec['status'] === true) {
+                        if (responseCode === '401') {
+                            responses[response]['sec401status'] = true;
+                        }
+                        else if (responseCode === '403') {
+                            responses[response]['sec403status'] = true;
+                        } else {
+                            if (typeof responses[response]['sec401status'] === "undefined") {
+                                responses[response]['sec401status'] = false;
+                            }
+                            if (typeof responses[response]['sec403status'] === "undefined") {
+                                responses[response]['sec403status'] = false;
+                            }
+                        }
+                    }
+                } else {
+                    responses[response]['sec401status'] = true;
+                    responses[response]['sec403status'] = true;
+                }
+            }
+            
+
+
+
 
 
            
@@ -274,8 +334,8 @@ public checkSecurity() {
     var api_object: {[index: string]:any} = {};
     api_object['addr_list'] = this.checkHTTP();
     api_object['sec_schemes'] = this.checkSecurityScheme();
-    api_object['sec_field'] = this.checkSecurityField();
-    api_object['responses'] = this.responseCheck();
+    api_object['sec_field'] = this.checkSecurityField(this.yaml.security);
+    api_object['responses'] = this.responseCheck(api_object['sec_field']['status']);
     console.log(api_object);
     return api_object;
 }

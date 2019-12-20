@@ -1,6 +1,6 @@
 {
-	"name": "helloworld",
-	"displayName": "HelloWorld",
+	"name": "openapispecificationtester",
+	"displayName": "OpenAPI specification tester",
 	"description": "",
 	"version": "0.0.1",
 	"engines": {
@@ -10,14 +10,14 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.helloWorld"
+		"onCommand:extension.openapispecificationtester"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "extension.helloWorld",
-				"title": "testi"
+				"command": "extension.openapispecificationtester",
+				"title": "OpenAPItest"
 			}
 		]
 	},
@@ -26,17 +26,21 @@
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"pretest": "npm run compile",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTest.js",
+		"readapi_test": "mocha -r ts-node/register src/test/test.ts"
 	},
 	"devDependencies": {
+		"@types/chai": "^4.2.7",
 		"@types/glob": "^7.1.1",
-		"@types/mocha": "^5.2.6",
+		"@types/mocha": "^5.2.7",
 		"@types/node": "^10.12.21",
 		"@types/vscode": "^1.38.0",
+		"chai": "^4.2.0",
 		"glob": "^7.1.4",
-		"mocha": "^6.1.4",
-		"typescript": "^3.3.1",
+		"mocha": "^6.2.2",
+		"ts-node": "^8.5.4",
 		"tslint": "^5.12.1",
+		"typescript": "^3.3.1",
 		"vscode-test": "^1.2.0"
 	},
 	"dependencies": {
