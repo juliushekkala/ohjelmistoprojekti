@@ -15,6 +15,7 @@ checkParamSchemas() {
     //Checks if each parameter object has a schema defined
     //Schemas limit accepted inputs (SQL injections)
     //Does NOT recognize entirely missing parameters as an error, just missing schemas
+    //This could probably be remade to make use of findTargets(), see checkSchemas()
     var paths = this.yaml.paths;
     var problemparams: {[index: string]:any} = {};
     problemparams['status'] = true;
@@ -22,11 +23,11 @@ checkParamSchemas() {
     for (let path in paths) {
         if (paths[path]['parameters'] !== undefined) {
             for (let i=0; i<paths[path]['parameters'].length; i++) {
-                if (paths[path]['parameters'][i]['$ref'] === undefined) {
+                if (paths[path]['parameters'][i]['$ref'] !== undefined) {
                     continue;
                 }
                 if (paths[path]['parameters'][i]['schema'] === undefined && paths[path]['parameters'][i]['content'] === undefined) {
-                    let location = "paths" + path +  "/" + "parameters";
+                    let location = "paths" + path +  "/" + "parameters" + "/" + i;
                     problemparams.locations.push(location);
                     if (problemparams['status']) {
                         problemparams['status'] = false;
@@ -46,7 +47,7 @@ checkParamSchemas() {
                         continue;
                     }
                     if (paths[path][itemobject]['parameters'][i]['schema'] === undefined && paths[path][itemobject]['parameters'][i]['content'] === undefined) {
-                        let location = "paths" + path + "/" + itemobject + "/" + "parameters";
+                        let location = "paths" + path + "/" + itemobject + "/" + "parameters" + "/" + i;
                         problemparams.locations.push(location);
                         if (problemparams['status']) {
                             problemparams['status'] = false;
@@ -73,7 +74,6 @@ checkParamSchemas() {
         }
     }
     //var testet = paths['/pet']['post']['requestBody']['$ref'];
-    //console.log(testet);
     return problemparams;
 }
 
@@ -92,6 +92,20 @@ checkSchemas() {
         if (typeof contract[field] === 'object') {
             let subObject = contract[field];
             this.findTargets('schema', subObject, schemas, field);
+        }
+    }
+    //Checking for schema combining keywords, anyOf, oneOf and allOf
+    //Splits those lists of schemas to individual schemas
+    for (let schema in schemas) {
+        if (schemas[schema]['oneOf'] !== undefined || schemas[schema]['anyOf'] !== undefined || schemas[schema]['allOf'] !== undefined){
+            for (let combiner in schemas[schema]) {
+                let OfList = schemas[schema][combiner];
+                for (let sub in OfList) {
+                    let updatedloc = schema + '/' + combiner + '/' + sub;
+                    schemas[updatedloc] = OfList[sub];
+                }
+            }
+            delete schemas[schema];
         }
     }
     schema_check['empty_schemas'] = this.emptySchemas(schemas);
@@ -156,7 +170,7 @@ arraySchemaIssues(schemas: any) {
                         }
                         statbool = false;
                     }
-                    else if (schemas[schema]['items']['type'] === undefined && schemas[schema]['items']['$ref'] === undefined) {
+                    else if (typeschemas[typeschema]['items']['type'] === undefined && typeschemas[typeschema]['items']['$ref'] === undefined) {
                         if (statbool) {
                             array_schemas.locations.push(schema);
                             if (array_schemas['status']) {
@@ -199,11 +213,12 @@ numericSchemaIssues(schemas: any) {
             if (schemas[schema]['properties'] !== undefined) {
                 let typeschemas: {[index: string]:any} = {};
                 let statbool = true; //Schemas should be added to numeric_schemas only once
+                //Integer and Number schemas are similar, but still two different types, have to be searched for individually
                 this.findSchemasOfType('integer', schemas[schema]['properties'], typeschemas);
                 this.findSchemasOfType('number', schemas[schema]['properties'], typeschemas);
                 for (let typeschema in typeschemas) {
                     if (typeschemas[typeschema]['type'] === 'integer') { 
-                        if (typeschemas[typeschema]['format'] !== 'int32' && typeschemas[typeschema]['format'] !== 'int64' && statbool) { //Expected input to cut down possible attack vectors
+                        if (typeschemas[typeschema]['format'] !== 'int32' && typeschemas[typeschema]['format'] !== 'int64' && statbool) { //Expected input to cut down possible attack vectors, format: long is currently a vulnerability
                             numeric_schemas.locations.push(schema);
                             if (numeric_schemas['status']) {
                                 numeric_schemas['status'] = false;
@@ -270,10 +285,10 @@ stringSchemaIssues(schemas: any) {
         if (schematype === 'object') {
             if (schemas[schema]['properties'] !== undefined) {
                 let typeschemas: {[index: string]:any} = {};
-                let statbool = true; //Schemas should be added to numeric_schemas only once
+                let statbool = true; //Schemas should be added to string_schemas only once
                 this.findSchemasOfType('string', schemas[schema]['properties'], typeschemas);
                 for (let typeschema in typeschemas) {
-                    if (typeschemas[typeschema]['maxLength'] === undefined || typeschemas[typeschema]['pattern'] === undefined) {
+                    if (typeschemas[typeschema]['maxLength'] === undefined || (typeschemas[typeschema]['pattern'] === undefined && typeschemas[typeschema]['enum'] === undefined)) {
                         if (statbool) {
                             string_schemas.locations.push(schema);
                             if (string_schemas['status']) {
@@ -300,14 +315,14 @@ stringSchemaIssues(schemas: any) {
 objectSchemaIssues(schemas: any) {
     //Checks schemas type 'object'
     //Checks if schemas have properties defined and additional properties blocked
-    //Problems with empty schemas!
+    //Checks if subschemas have types
     var object_schemas: {[index: string]:any} = {};
     object_schemas['status'] = true;
     object_schemas.locations = [];
     for (let schema in schemas) {
         let schematype = schemas[schema]['type'];
         if (schematype === 'object') {
-            if (schemas[schema]['properties'] === undefined || schemas[schema]['additionalProperties'] !== false) {
+            if (schemas[schema]['properties'] === undefined || schemas[schema]['additionalProperties'] !== false) { //Properties being defined poorly can 
                 object_schemas.locations.push(schema);
                 if (object_schemas['status']) {
                     object_schemas['status'] = false;
@@ -328,9 +343,12 @@ objectSchemaIssues(schemas: any) {
 }
 
 checkValueTypes(props: any): boolean{
+    //Used for checking if subschemas have types
     let typestatus = true;
     for (let schema in props) {
         if (props[schema] === null) {
+            //Subschema is empty, thus is an issue
+            typestatus = false;
             continue;
         }
         if (props[schema]['type'] === 'object' && typestatus) {
@@ -368,6 +386,7 @@ findSchemasOfType(type: string, props: any, collection: any) {
 public findTargets(target: string, obj: any, collection: any, location: string) {
     //Recursively looks for occurrances of target in obj
     //Found occurrances and their location is saved in collection
+    //Does not look for targets within target
     //console.log('In location: ' + location);
     for (let field in obj) {
         if (typeof obj[field] === 'object') {
