@@ -194,6 +194,10 @@ export function resetParsedArray() {
     //reset the array, had some problems
     parsedArray = [];}
 
+export function resetstatusRows() {
+    //reset the array, had some problems
+    statusRows = [];}
+
 export function buildTrees(results: any) {
     //parse object trees into log file
     logger.silly("*************Start of object tree of test:*************");

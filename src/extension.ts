@@ -63,7 +63,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		messages.buildTrees(apiResults); //prints tree
 		messages.buildTrees(dataResults); //prints tree
-
+		messages.resetstatusRows();
 		messages.resetParsedArray();
 		messages.generateArrays(messages.parsed(apiResults)); //makes a parsedArray, and parses it
 		messages.resetParsedArray();
