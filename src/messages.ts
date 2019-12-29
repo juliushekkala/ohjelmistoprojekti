@@ -73,11 +73,11 @@ export function start() {
             }),
             // uncomment the row under this if you want more info
 
-            //new winston.transports.File({
-            //    level: 'silly', //logs silly and more severe, all info here
-            //    dirname: logFileDir,
-            //    filename: debugFileName
-           // })
+            new winston.transports.File({
+                level: 'silly', //logs silly and more severe, all info here
+                dirname: logFileDir,
+                filename: debugFileName
+            })
         ]
         });
 
@@ -369,8 +369,9 @@ export function endStats(){
                 logger.info(exploit);
             }
             else {
-                outChannel.appendLine(nice);}
+                outChannel.appendLine(nice);
                 logger.info(nice);
+            }
         }
         else if (element.startsWith("sec_schemes: status:")) {
             //take status
@@ -382,8 +383,9 @@ export function endStats(){
                 logger.info(exploit);
             }
             else {
-                outChannel.appendLine(nice);}
+                outChannel.appendLine(nice);
                 logger.info(nice);
+            }
         }
         else if (element.startsWith("sec_field: status:")) {
             //take status
@@ -395,8 +397,10 @@ export function endStats(){
                 logger.info(exploit);
             }
             else {
-                outChannel.appendLine(nice);}
-                logger.info(nice);        }
+                outChannel.appendLine(nice);
+                logger.info(nice);        
+            }
+        }
         else if (element.startsWith("param_schemas: status:")) {
             //take status
             selectTextStrings("param_schemas");
