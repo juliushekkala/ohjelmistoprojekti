@@ -73,11 +73,12 @@ export function start() {
             }),
             // uncomment the row under this if you want more info
 
+            /*
             new winston.transports.File({
                 level: 'silly', //logs silly and more severe, all info here
                 dirname: logFileDir,
                 filename: debugFileName
-            })
+            })*/
         ]
         });
 
