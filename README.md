@@ -10,7 +10,7 @@ Clone the repository and open it in Visual Studio Code. Run
 npm install
 ```
 
-in the folder. Then you can press "F5" in Visual Studio Code and it will open an extension development host. There you can press "Ctrl + shift + P" and then write "OpenAPITest" command to run the plugin. Before running the plugin make sure an OpenAPI specification yaml is currently open in the extension development host.
+in the folder. Then you can press "F5" in Visual Studio Code and it will open an extension development host. There you can press "Ctrl + shift + P" and then write "OpenAPItest" command to run the plugin. Before running the plugin make sure an OpenAPI specification yaml is currently open in the extension development host.
 Test results will appear in output and are saved in a log file.
 
 ## Known Issues
